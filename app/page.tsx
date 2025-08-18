@@ -62,6 +62,9 @@ export default function HomePage() {
           <a href="#" className="text-white hover:text-purple-200 transition-colors">
             价格
           </a>
+          <a href="/dashboard" className="text-white hover:text-purple-200 transition-colors">
+            Dashboard
+          </a>
           <a
             href="/signin"
             className="bg-white text-purple-900 px-6 py-2 rounded-full hover:bg-purple-50 transition-colors font-medium"

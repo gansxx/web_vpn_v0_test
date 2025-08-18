@@ -25,9 +25,12 @@ export default function SignInPage() {
         <div className="bg-white rounded-lg shadow-sm p-8">
           <div className="flex items-center justify-between mb-8">
             <h2 className="text-2xl font-bold text-gray-900">登录</h2>
-            <button className="text-blue-600 border border-blue-600 px-4 py-2 rounded-lg hover:bg-blue-50 transition-colors text-sm">
+            <a
+              href="/register"
+              className="text-blue-600 border border-blue-600 px-4 py-2 rounded-lg hover:bg-blue-50 transition-colors text-sm"
+            >
               注册新账户
-            </button>
+            </a>
           </div>
 
           <form className="space-y-6">
@@ -107,12 +110,12 @@ export default function SignInPage() {
                 登录
               </button>
 
-              <button
-                type="button"
+              <a
+                href="/register"
                 className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-500 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
               >
                 注册新账户
-              </button>
+              </a>
             </div>
           </form>
         </div>

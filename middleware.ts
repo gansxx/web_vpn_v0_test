@@ -27,11 +27,12 @@ export async function middleware(req: NextRequest) {
 
   // 仅保护 /dashboard 及其子路径
   if (pathname.startsWith("/dashboard")) {
+    console.log("req:",req)
     const cookie = req.cookies.get("access_token");
     const token = cookie?.value ?? null;
     console.log("[MW] cookie access_token:", cookie);
     console.log("[MW] token present:", !!token);
-
+    //ToDo:当前还没有在当前页面中加入token验证逻辑(可能会有伪造token风险)
     if (!token) {
       const url = req.nextUrl.clone();
       url.pathname = "/signin";

@@ -2,6 +2,12 @@
 
 import { useState } from "react"
 
+// 清除指定名称的认证 cookie，用于执行登出
+function clearCookie(name: string) {
+  if (typeof document === "undefined") return
+  document.cookie = `${encodeURIComponent(name)}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; samesite=lax`
+}
+
 export default function Dashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
@@ -185,6 +191,16 @@ export default function Dashboard() {
             </div>
 
             <div className="flex items-center space-x-4">
+              {/* 登出按钮：清除 access_token 并跳转登录页 */}
+              <button
+                onClick={() => {
+                  clearCookie("access_token")
+                  window.location.href = "/signin"
+                }}
+                className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 border"
+              >
+                退出登录
+              </button>
               <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
                 <span className="text-white font-medium">U</span>
               </div>

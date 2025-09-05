@@ -1,6 +1,156 @@
 "use client"
 
+import { useEffect, useState, FormEvent, ChangeEvent } from "react"
+import { API_BASE } from "@/lib/config"
+// cookie获取逻辑
+function getCookie(name: string): string | null {
+  if (typeof document === "undefined") return null
+  const value = `; ${document.cookie}`
+  const parts = value.split(`; ${encodeURIComponent(name)}=`)
+  if (parts.length === 2) return decodeURIComponent(parts.pop()!.split(";").shift()!)
+  return null
+}
+
+
+function setCookie(
+  name: string,
+  value: string,
+  days?: number,
+  opts: { sameSite?: 'Strict' | 'Lax' | 'None'; secure?: boolean } = {}
+) {
+  // 如果 document 对象不存在，则返回
+  if (typeof document === 'undefined') return;
+  // 创建数组，同时通过encodeURIComponent确保特殊字符被正确处理*
+  const parts: string[] = [
+    `${encodeURIComponent(name)}=${encodeURIComponent(value)}`,
+    'path=/',
+  ];
+
+  // 默认宽松：本地开发用 Lax，线上可覆盖为 None
+  //lax只允许同源请求，none允许所有请求
+  const sameSite = opts.sameSite || 'Lax';
+  parts.push(`samesite=${sameSite}`);
+
+  // 只有 SameSite=None 时强制 Secure（浏览器要求）
+  const secure = opts.secure ?? (sameSite === 'None');
+  if (secure) parts.push('secure');
+
+  if (days && days > 0) {
+    const d = new Date();
+    d.setTime(d.getTime() + days * 24 * 60 * 60 * 1000);
+    parts.push(`expires=${d.toUTCString()}`);
+  }
+
+  document.cookie = parts.join('; ');
+}
+
 export default function SignInPage() {
+  // 默认勾选记住我
+  const [form, setForm] = useState({ email: "", password: "", remember: true })
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  // 字段级错误：用于展示「请输入邮箱/密码」等前端校验
+  const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({})
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+
+  // 建议放在 form/submitting/error 这三行 useState 后面
+  type Dbg = { apiBase: string; token: string; tokenLen: number; url: string; status: string; err: string }
+  const [dbg, setDbg] = useState<Dbg>({ apiBase: API_BASE, token: "", tokenLen: 0, url: "", status: "", err: "" })
+
+  const clearCookie = (name: string) => {
+    if (typeof document === "undefined") return
+    document.cookie = `${encodeURIComponent(name)}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; samesite=lax`
+  }
+
+  //界面加载函数
+  const recheck = async () => {
+    const rememberMe = getCookie("remember_me") === "true"
+    const token = getCookie("access_token")
+
+    setDbg((p) => ({ ...p, token: token || "", tokenLen: token ? token.length : 0, status: token ? "token-found" : "no-token", err: "", url: "" }))
+    //当token不存在或remmberMe不存在或为false时，不自动加载
+    if (!token || !rememberMe) return
+    const url = `${API_BASE}/me?token=${encodeURIComponent(token)}`
+    setDbg((p) => ({ ...p, url, status: "requesting" }))
+    try {
+      const r = await fetch(url, { credentials: "include" })
+      console.log("[signin] /me status:", r.status)
+      setDbg((p) => ({ ...p, status: String(r.status) }))
+      if (r.ok) {
+        await r.json()
+        window.location.href = "/dashboard"
+      }
+    } catch (e: any) {
+      console.error("[signin] /me error:", e)
+      setDbg((p) => ({ ...p, err: e?.message || String(e), status: "error" }))
+    }
+  }
+  //在组件加载时，自动调用 recheck 函数，尝试从 Cookie 中获取 access_token 并验证其有效性。
+  useEffect(() => {
+    recheck()
+  }, [])
+
+  const onChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const { name, type } = e.target
+    const value = type === "checkbox" ? (e.target as HTMLInputElement).checked : e.target.value
+    setForm((p) => ({ ...p, [name]: value }))
+    if (error) setError(null)
+    if (fieldErrors[name as keyof typeof fieldErrors]) {
+      setFieldErrors((prev) => ({ ...prev, [name]: undefined }))
+    }
+  }
+  // 登录逻辑
+  const onSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    // 基础的前端必填校验
+    if (!form.email || !form.password) {
+      setFieldErrors({
+        email: !form.email ? "请输入邮箱" : undefined,
+        password: !form.password ? "请输入密码" : undefined,
+      })
+      return
+    }
+    setSubmitting(true)
+    setError(null)
+    try {
+      const r = await fetch(`${API_BASE}/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: form.email, password: form.password }),
+      })
+      // 将后端返回的错误信息透出到界面
+      if (!r.ok) {
+        let msg = "登录失败"
+        try {
+          const j = await r.json()
+          msg = j?.error || j?.message || msg
+        } catch {}
+        throw new Error(msg)
+      }
+      const j = await r.json()
+      const token: string | undefined = j?.access_token
+      if (!token) throw new Error("未返回令牌")
+      // 仅在勾选“记住密码”时写入持久化 cookie；否则不保存 cookie
+      if (form.remember) {
+        setCookie("remember_me", "true", 30)
+        setCookie("access_token", token, 30)
+      } else {
+        setCookie("remember_me", "false", 1)
+        setCookie("access_token", token, 1)
+      }
+        setCookie("access_token", token, 30)
+        window.location.href = "/dashboard"
+      
+        window.location.href = "/dashboard"
+        // clearCookie("access_token")
+      
+    } catch (err: any) {
+      setError(err?.message || "登录失败")
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
@@ -33,7 +183,7 @@ export default function SignInPage() {
             </a>
           </div>
 
-          <form className="space-y-6">
+          <form className="space-y-6" onSubmit={onSubmit}>
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
                 电子邮件地址
@@ -44,9 +194,14 @@ export default function SignInPage() {
                 type="email"
                 autoComplete="email"
                 required
-                className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                value={form.email}
+                onChange={onChange}
+                className={`w-full px-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                  fieldErrors.email ? "border-red-500" : "border-gray-300"
+                }`}
                 placeholder=""
               />
+              {fieldErrors.email && <p className="mt-1 text-sm text-red-600">{fieldErrors.email}</p>}
             </div>
 
             <div>
@@ -57,13 +212,17 @@ export default function SignInPage() {
                 <input
                   id="password"
                   name="password"
-                  type="password"
+                  type={showConfirmPassword ? "text" : "password"}
                   autoComplete="current-password"
                   required
-                  className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-10"
+                  value={form.password}
+                  onChange={onChange}
+                  className={`w-full px-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-10 ${
+                    fieldErrors.password ? "border-red-500" : "border-gray-300"
+                  }`}
                   placeholder=""
                 />
-                <button type="button" className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center">
                   <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
                       strokeLinecap="round"
@@ -80,14 +239,17 @@ export default function SignInPage() {
                   </svg>
                 </button>
               </div>
+              {fieldErrors.password && <p className="mt-1 text-sm text-red-600">{fieldErrors.password}</p>}
             </div>
 
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <input
                   id="remember-me"
-                  name="remember-me"
+                  name="remember"
                   type="checkbox"
+                  checked={form.remember}
+                  onChange={onChange}
                   className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                 />
                 <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
@@ -96,18 +258,21 @@ export default function SignInPage() {
               </div>
 
               <div className="text-sm">
-                <a href="#" className="text-gray-600 hover:text-blue-600">
+                <a href="/recall" className="text-gray-600 hover:text-blue-600">
                   忘记密码？
                 </a>
               </div>
             </div>
 
+            {error && <p className="text-sm text-red-600">{error}</p>}
+
             <div className="space-y-3">
               <button
                 type="submit"
-                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                disabled={submitting}
+                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
               >
-                登录
+                {submitting ? "登录中..." : "登录"}
               </button>
 
               <a
@@ -118,6 +283,33 @@ export default function SignInPage() {
               </a>
             </div>
           </form>
+        </div>
+        <div className="mt-6 p-3 text-xs rounded bg-gray-50 border">
+          <div>API_BASE: {dbg.apiBase}</div>
+          <div>tokenLen: {dbg.tokenLen} {dbg.tokenLen ? "✅" : "❌"}</div>
+          <div>url: {dbg.url || "(未发起)"}</div>
+          <div>status: {dbg.status}</div>
+          {dbg.err && <div className="text-red-600 break-all">err: {dbg.err}</div>}
+          <div className="mt-2 flex gap-2">
+            <button
+              type="button"
+              className="px-2 py-1 rounded border"
+              onClick={recheck}
+            >
+              重新检测
+            </button>
+            <button
+              type="button"
+              className="px-2 py-1 rounded border"
+              onClick={() => {
+                clearCookie("access_token")
+                setDbg((p) => ({ ...p, token: "", tokenLen: 0, url: "", status: "cleared", err: "" }))
+                console.log("[signin] access_token cleared")
+              }}
+            >
+              清除 access_token
+            </button>
+          </div>
         </div>
       </div>
     </div>

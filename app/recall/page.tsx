@@ -3,14 +3,12 @@
 import { useState, FormEvent, ChangeEvent } from "react"
 import { API_BASE } from "@/lib/config"
 
-export default function RegisterPage() {
-  // 使用 useState 钩子定义了一个名为 formData 的状态变量，用于存储用户输入的表单数据。
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-    confirmPassword: "",
-    verificationCode: "",
-    inviteCode: "",
+export default function recallpage(){
+    const [formData, setFormData] = useState({
+        email: "",
+        code: "",
+        new_password:"",
+        confirmnewcode:"",  // 修复拼写错误
   })
   const [errors, setErrors] = useState<{ [key: string]: string }>({})
   // 提交阶段的统一错误提示（例如接口错误）
@@ -19,111 +17,101 @@ export default function RegisterPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isCodeSent, setIsCodeSent] = useState(false)
   const [countdown, setCountdown] = useState(0)
-  const [sendingCode, setSendingCode] = useState(false)
-  const [submitting, setSubmitting] = useState(false)
-
-  // 确认密码校验：不一致时给出用户可见的错误
+  
+  // 新密码一致性校验：两次密码不一致时给提示
   const validatePasswords = () => {
     const newErrors: { [key: string]: string } = {}
-    if (formData.password && formData.confirmPassword && formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = "两次输入的密码不一致"
+    if (formData.new_password && formData.confirmnewcode && formData.new_password !== formData.confirmnewcode) {
+      console.error("两次输入密码不同")
+      newErrors.confirmnewcode = "两次输入的密码不一致"  // 修复字段名
     }
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
-
-  // 发送邮箱验证码：前端校验+失败信息提示
-  const sendVerificationCode = async () => {
+  
+    const sendVerificationCode = async () => {
+      console.log("开始提交表单")
     if (!formData.email) {
       setErrors({ email: "请先输入邮箱地址" })
       return
     }
-    setSubmitError("")
-    setSendingCode(true)
-    try {
-      const res = await fetch(`${API_BASE}/otp/send`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: formData.email }),
-        credentials: "include",
-      })
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({ error: "发送失败" }))
-        const msg = data.error || data.detail || "发送失败"
-        setErrors({ email: msg })
-        setSubmitError(msg)
-        return
-      }
-
-      setIsCodeSent(true)// 显示「验证码已发送」提示
-      setCountdown(60)// 倒计时 60 秒
-
-      const timer = setInterval(() => {
-        setCountdown((prev) => {
-          if (prev <= 1) {
-            clearInterval(timer)
-            return 0
-          }
-          return prev - 1
-        })
-      }, 1000)
-    } catch (e: any) {
-      const msg = e?.message || "网络错误，请重试"
-      setErrors({ email: msg })
-      setSubmitError(msg)
-    } finally {
-      setSendingCode(false)
+    const res = await fetch(`${API_BASE}/recall`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: formData.email }),
+      credentials: "include",
+    })
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({ error: "发送失败" }))
+      setErrors({ email: data.error || "发送失败" })
+      return
     }
+    setIsCodeSent(true)// 显示「验证码已发送」提示
+    setCountdown(60)// 倒计时 60 秒
+    const timer = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer)
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
   }
-// 提交表单
-  // 注册提交：前端必填校验 + 接口错误提示
+  
+  // 提交表单
   const onSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    console.log("表单提交触发", formData) // 添加调试日志
 
-    if (!formData.email || !formData.verificationCode) {
+    if (!formData.email || !formData.code || !formData.new_password) {
       setErrors({
         email: !formData.email ? "请输入邮箱" : "",
-        verificationCode: !formData.verificationCode ? "请输入验证码" : "",
+        code: !formData.code ? "请输入验证码" : "",
+        new_password:!formData.new_password ? "请输入新密码":"",
       })
       return
     }
 
     if (!validatePasswords()) return
 
-    setSubmitError("")
-    setSubmitting(true)
     try {
-      const res = await fetch(`${API_BASE}/otp/verify`, {
+      // 清空旧的提交错误提示
+      setSubmitError("")
+      console.log("发送重置密码请求到:", `${API_BASE}/recall/reset`)
+      const res = await fetch(`${API_BASE}/recall/reset`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: formData.email, code: formData.verificationCode }),
+        body: JSON.stringify({ 
+          email: formData.email, 
+          code: formData.code,
+          new_password: formData.new_password 
+        }),
         credentials: "include",
       })
 
+      console.log("响应状态:", res.status)
+      const data = await res.json()
+      console.log("响应数据:", data)
+
       if (!res.ok) {
-        const data = await res.json().catch(() => ({ error: "验证失败" }))
         const msg = data.error || data.detail || "验证失败"
         setErrors({ verificationCode: msg })
         setSubmitError(msg)
         return
       }
-      const data = await res.json().catch(() => ({ ok: true }))
-      if (data && data.error) {
-        setErrors({ verificationCode: data.error })
-        setSubmitError(data.error)
-        return
-      }
-      // 重定向到 dashboard 页面
-      window.location.href = "/dashboard"
-    } catch (e: any) {
-      const msg = e?.message || "网络错误，请重试"
-      setErrors({ verificationCode: msg })
-      setSubmitError(msg)
-    } finally {
-      setSubmitting(false)
+      
+      // 成功时清除错误
+      setErrors({})
+      // 重定向到登录页面
+      window.location.href = "/signin"
+    } catch (error) {
+      console.error("请求失败:", error)
+      setErrors({ verificationCode: "网络错误，请重试" })
+      setSubmitError("网络错误，请重试")
     }
   }
+
   // 处理输入变化
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -133,8 +121,9 @@ export default function RegisterPage() {
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: "" }))
     }
-  }
 
+    
+  }
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
@@ -155,10 +144,10 @@ export default function RegisterPage() {
           </p>
         </div>
 
-        {/* Register Form */}
+        {/* recall Form */}
         <div className="bg-white rounded-lg shadow-sm p-8">
           <div className="flex items-center justify-between mb-8">
-            <h2 className="text-2xl font-bold text-gray-900">注册新账户</h2>
+            <h2 className="text-2xl font-bold text-gray-900">重置密码</h2>
           </div>
 
           <form className="space-y-6" onSubmit={onSubmit}>
@@ -189,10 +178,10 @@ export default function RegisterPage() {
               <div className="flex space-x-3">
                 <input
                   id="verification-code"
-                  name="verificationCode"
+                  name="code"
                   type="text"
                   required
-                  value={formData.verificationCode}
+                  value={formData.code}
                   onChange={handleInputChange}
                   className="flex-1 px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="请输入验证码"
@@ -200,30 +189,30 @@ export default function RegisterPage() {
                 <button
                   type="button"
                   onClick={sendVerificationCode}
-                  disabled={countdown > 0 || sendingCode}
+                  disabled={countdown > 0}
                   className={`px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
-                    countdown > 0 || sendingCode
+                    countdown > 0
                       ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                       : "bg-blue-600 text-white hover:bg-blue-700"
                   }`}
                 >
-                  {countdown > 0 ? `${countdown}s` : (sendingCode ? "发送中..." : "发送验证码")}
+                  {countdown > 0 ? `${countdown}s` : "发送验证码"}
                 </button>
               </div>
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="newcode" className="block text-sm font-medium text-gray-700 mb-2">
                 密码
               </label>
               <div className="relative">
                 <input
-                  id="password"
-                  name="password"
+                  id="newcode"
+                  name="new_password"
                   type={showPassword ? "text" : "password"}
                   autoComplete="new-password"
                   required
-                  value={formData.password}
+                  value={formData.new_password}
                   onChange={handleInputChange}
                   className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-10"
                   placeholder="请输入密码"
@@ -252,21 +241,21 @@ export default function RegisterPage() {
             </div>
 {/* type="password" 根据 showConfirmPassword 的值动态设置输入框的类型。如果 showConfirmPassword 为 true，则显示为明文（text），否则显示为密码（password）。。 */}
             <div>
-              <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="comfirmnewcode" className="block text-sm font-medium text-gray-700 mb-2">
                 确认密码
               </label>
               <div className="relative">
                 <input
-                  id="confirm-password"
-                  name="confirmPassword"
+                  id="confirmnewcode"
+                  name="confirmnewcode"
                   type={showConfirmPassword ? "text" : "password"}
                   autoComplete="new-password"
                   required
-                  value={formData.confirmPassword}
+                  value={formData.confirmnewcode}
                   onChange={handleInputChange}
                   onBlur={validatePasswords} // 绑定 onBlur 事件
                   className={`w-full px-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-10 ${
-                    errors.confirmPassword ? "border-red-500" : "border-gray-300"
+                    errors.confirmnewcode ? "border-red-500" : "border-gray-300"
                   }`}
                   placeholder="请再次输入密码"
                 />
@@ -292,22 +281,7 @@ export default function RegisterPage() {
                   </svg>
                 </button>
               </div>
-              {errors.confirmPassword && <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>}
-            </div>
-
-            <div>
-              <label htmlFor="invite-code" className="block text-sm font-medium text-gray-700 mb-2">
-                邀请码 <span className="text-gray-400">(可选)</span>
-              </label>
-              <input
-                id="invite-code"
-                name="inviteCode"
-                type="text"
-                value={formData.inviteCode}
-                onChange={handleInputChange}
-                className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="请输入邀请码"
-              />
+              {errors.confirmnewcode && <p className="mt-1 text-sm text-red-600">{errors.confirmnewcode}</p>}
             </div>
 
             <div className="flex items-start">
@@ -335,15 +309,13 @@ export default function RegisterPage() {
             </div>
 
             <div className="space-y-3">
-              {submitError && (
-                <div className="text-sm text-red-600">{submitError}</div>
-              )}
+              {submitError && <div className="text-sm text-red-600">{submitError}</div>}
               <button
                 type="submit"
-                disabled={submitting}
-                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                onClick={() => console.log("重置密码按钮被点击")}
               >
-                {submitting ? "提交中..." : "立即注册"}
+                重置密码
               </button>
 
               <button
@@ -351,6 +323,7 @@ export default function RegisterPage() {
                 className="w-full flex justify-center py-3 px-4 border border-blue-600 rounded-lg shadow-sm text-sm font-medium text-blue-600 bg-white hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
               >
                 <a href="/signin">返回登录</a>
+                
               </button>
             </div>
           </form>

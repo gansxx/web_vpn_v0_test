@@ -25,7 +25,7 @@ export default function Dashboard() {
                 <div className="absolute top-0.5 left-0.5 w-1.5 h-1.5 bg-white rounded-full"></div>
               </div>
             </div>
-            <span className="text-gray-900 text-lg font-medium">帕克云</span>
+            <span className="text-gray-900 text-lg font-medium">Z加速</span>
           </div>
         </div>
 

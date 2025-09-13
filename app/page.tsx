@@ -43,7 +43,7 @@ export default function HomePage() {
               <div className="absolute top-1 left-1 w-2 h-2 bg-white rounded-full"></div>
             </div>
           </div>
-          <span className="text-white text-xl font-medium">帕克云</span>
+          <span className="text-white text-xl font-medium">Z加速</span>
         </div>
 
         <nav className="hidden md:flex items-center space-x-8">
@@ -81,16 +81,14 @@ export default function HomePage() {
           <div className="space-y-8">
             <div className="space-y-6">
               <h1 className="text-5xl lg:text-6xl font-bold text-white leading-tight">
-                帕克云加速器
+                Z加速
                 <br />
-                带你飞翔世界的每个
-                <br />
-                角落
+                解锁世界精彩
+                
               </h1>
 
               <p className="text-purple-200 text-lg leading-relaxed max-w-2xl">
-                智能分流系统，国内网站直连，增强用户体验；Apple服务加速；外服游戏加速（IEPL专线）；国外常用网站加速
-                (Google/ChatGPT/Youtube/Twitter/Instagram/Github等)；在传输过程中使用最强的加密方式，保护用户数据和隐私；与诸多平台上的优秀应用程序兼容；
+                测试期间注册即可以免费使用，支持多种设备和平台，随时随地高速访问全球内容。
               </p>
             </div>
 

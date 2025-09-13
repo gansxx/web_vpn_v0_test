@@ -9,7 +9,7 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-accent/10">
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 items-center justify-between px-6">
           <div className="flex items-center space-x-3">
@@ -48,8 +48,9 @@ export default function HomePage() {
         </div>
       </header>
 
-      <section className="py-24 px-6">
-        <div className="container mx-auto text-center max-w-4xl">
+      <section className="py-24 px-6 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-transparent to-accent/10 pointer-events-none"></div>
+        <div className="container mx-auto text-center max-w-4xl relative z-10">
           <div className="animate-fade-in-up">
             <h1 className="text-5xl md:text-7xl font-bold text-foreground mb-6 text-balance">
               解锁全球
@@ -70,7 +71,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section id="features" className="py-20 px-6 bg-muted/30">
+      <section id="features" className="py-20 px-6 bg-gradient-to-b from-muted/30 via-muted/20 to-background">
         <div className="container mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">为什么选择我们</h2>
@@ -129,8 +130,9 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section id="services" className="py-20 px-6">
-        <div className="container mx-auto">
+      <section id="services" className="py-20 px-6 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 via-transparent to-accent/5 pointer-events-none"></div>
+        <div className="container mx-auto relative z-10">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <div>
               <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-6">适用于各种场景</h2>
@@ -182,7 +184,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section id="download" className="py-20 px-6 bg-muted/30">
+      <section id="download" className="py-20 px-6 bg-gradient-to-b from-background via-muted/20 to-muted/30">
         <div className="container mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">立即开始使用</h2>
@@ -249,7 +251,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <footer className="bg-primary text-primary-foreground py-12 px-6">
+      <footer className="bg-gradient-to-r from-primary via-primary to-accent text-primary-foreground py-12 px-6">
         <div className="container mx-auto">
           <div className="grid md:grid-cols-4 gap-8">
             <div>

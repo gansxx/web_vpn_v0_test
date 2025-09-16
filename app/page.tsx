@@ -9,8 +9,8 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-accent/10">
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-accent/10 rounded-3xl border border-primary/20 shadow-2xl shadow-primary/10 m-4">
+      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 rounded-t-3xl">
         <div className="container flex h-16 items-center justify-between px-6">
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
@@ -31,6 +31,12 @@ export default function HomePage() {
               className="text-muted-foreground hover:text-primary transition-colors"
             >
               服务
+            </button>
+            <button
+              onClick={() => scrollToSection("pricing")}
+              className="text-muted-foreground hover:text-primary transition-colors"
+            >
+              定价
             </button>
             <button
               onClick={() => scrollToSection("download")}
@@ -161,25 +167,197 @@ export default function HomePage() {
             <div className="relative">
               <div className="bg-gradient-to-br from-primary/5 to-accent/5 rounded-2xl p-8 animate-float">
                 <div className="grid grid-cols-2 gap-4">
-                  <Card className="p-4">
-                    <div className="w-8 h-8 bg-red-500 rounded-lg mb-2"></div>
+                  <Card className="p-4 hover:shadow-lg transition-all duration-300">
+                    <div className="w-8 h-8 bg-red-500 rounded-lg mb-2 flex items-center justify-center">
+                      <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+                      </svg>
+                    </div>
                     <div className="text-sm font-medium">YouTube</div>
                   </Card>
-                  <Card className="p-4">
-                    <div className="w-8 h-8 bg-blue-500 rounded-lg mb-2"></div>
+                  <Card className="p-4 hover:shadow-lg transition-all duration-300">
+                    <div className="w-8 h-8 bg-red-600 rounded-lg mb-2 flex items-center justify-center">
+                      <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M5.398 0v.006c3.028 8.556 5.37 15.175 8.348 23.596 2.344.058 4.85.398 4.854.398-2.8-7.924-5.923-16.747-8.487-24zm8.489 0v9.63L18.6 22.951c-.043-7.86-.004-15.71.002-22.95zM5.398 1.05V24c8.914-.494 16.52-.418 16.52-.418V1.05z" />
+                      </svg>
+                    </div>
                     <div className="text-sm font-medium">Netflix</div>
                   </Card>
-                  <Card className="p-4">
-                    <div className="w-8 h-8 bg-green-500 rounded-lg mb-2"></div>
+                  <Card className="p-4 hover:shadow-lg transition-all duration-300">
+                    <div className="w-8 h-8 bg-blue-900 rounded-lg mb-2 flex items-center justify-center">
+                      <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M11.979 0C5.678 0 .511 5.158.511 11.479c0 6.321 5.167 11.488 11.468 11.488 6.321 0 11.488-5.167 11.488-11.488C23.467 5.158 18.3.001 11.979 0zM5.54 20.822l6.956-3.583c.461.794 1.338 1.338 2.328 1.338.461 0 .896-.126 1.277-.334l6.956 3.583c-1.845 1.845-4.267 2.328-6.956 2.328-2.689 0-5.111-.483-6.956-2.328zm15.822-3.583l-6.956-3.583c-.461-.794-1.338-1.338-2.328-1.338-.461 0-.896.126-1.277.334L4.845 16.235c1.845-1.845 4.267-2.328 6.956-2.328 2.689 0 5.111.483 6.956 2.328z" />
+                      </svg>
+                    </div>
                     <div className="text-sm font-medium">Steam</div>
                   </Card>
-                  <Card className="p-4">
-                    <div className="w-8 h-8 bg-purple-500 rounded-lg mb-2"></div>
+                  <Card className="p-4 hover:shadow-lg transition-all duration-300">
+                    <div className="w-8 h-8 bg-indigo-500 rounded-lg mb-2 flex items-center justify-center">
+                      <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1277c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419-.0190 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1568 2.4189Z" />
+                      </svg>
+                    </div>
                     <div className="text-sm font-medium">Discord</div>
                   </Card>
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="pricing" className="py-20 px-6 bg-gradient-to-b from-muted/20 via-background to-muted/20">
+        <div className="container mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">选择适合您的套餐</h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">灵活的定价方案，满足不同用户的需求</p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            {/* Free Plan */}
+            <Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-300 border-2 border-primary/20">
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              <CardContent className="p-8 relative z-10">
+                <div className="text-center mb-6">
+                  <h3 className="text-2xl font-bold text-foreground mb-2">免费套餐</h3>
+                  <div className="text-4xl font-bold text-primary mb-2">¥0</div>
+                  <p className="text-muted-foreground">测试期间免费使用</p>
+                </div>
+
+                <div className="space-y-4 mb-8">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center">
+                      <svg
+                        className="w-3 h-3 text-primary-foreground"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                    <span className="text-foreground">使用量：无限制</span>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center">
+                      <svg
+                        className="w-3 h-3 text-primary-foreground"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                    <span className="text-foreground">使用时间：测试期间</span>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center">
+                      <svg
+                        className="w-3 h-3 text-primary-foreground"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                    <span className="text-foreground">基础节点访问</span>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center">
+                      <svg
+                        className="w-3 h-3 text-primary-foreground"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                    <span className="text-foreground">多平台支持</span>
+                  </div>
+                </div>
+
+                <Button className="w-full" size="lg">
+                  立即开始
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Premium Plan */}
+            <Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-300 border-2 border-accent/50">
+              <div className="absolute top-0 right-0 bg-accent text-accent-foreground px-3 py-1 text-sm font-medium">
+                即将推出
+              </div>
+              <div className="absolute inset-0 bg-gradient-to-br from-accent/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              <CardContent className="p-8 relative z-10">
+                <div className="text-center mb-6">
+                  <h3 className="text-2xl font-bold text-foreground mb-2">付费套餐</h3>
+                  <div className="text-4xl font-bold text-accent mb-2">待推出</div>
+                  <p className="text-muted-foreground">更多高级功能</p>
+                </div>
+
+                <div className="space-y-4 mb-8">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-5 h-5 bg-accent rounded-full flex items-center justify-center">
+                      <svg
+                        className="w-3 h-3 text-accent-foreground"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                    <span className="text-foreground">免费套餐所有功能</span>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <div className="w-5 h-5 bg-accent rounded-full flex items-center justify-center">
+                      <svg
+                        className="w-3 h-3 text-accent-foreground"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                    <span className="text-foreground">高速专线节点</span>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <div className="w-5 h-5 bg-accent rounded-full flex items-center justify-center">
+                      <svg
+                        className="w-3 h-3 text-accent-foreground"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                    <span className="text-foreground">优先技术支持</span>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <div className="w-5 h-5 bg-accent rounded-full flex items-center justify-center">
+                      <svg
+                        className="w-3 h-3 text-accent-foreground"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                    <span className="text-foreground">高级功能解锁</span>
+                  </div>
+                </div>
+
+                <Button variant="outline" className="w-full bg-transparent" size="lg" disabled>
+                  敬请期待
+                </Button>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </section>
@@ -251,7 +429,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <footer className="bg-gradient-to-r from-primary via-primary to-accent text-primary-foreground py-12 px-6">
+      <footer className="bg-gradient-to-r from-primary via-primary to-accent text-primary-foreground py-12 px-6 rounded-b-3xl">
         <div className="container mx-auto">
           <div className="grid md:grid-cols-4 gap-8">
             <div>

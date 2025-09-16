@@ -5,6 +5,7 @@ import { useState } from "react"
 // 清除指定名称的认证 cookie，用于执行登出
 function clearCookie(name: string) {
   if (typeof document === "undefined") return
+  // 统一删除前端可见 cookie（非 HttpOnly）
   document.cookie = `${encodeURIComponent(name)}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; samesite=lax`
 }
 
@@ -193,9 +194,16 @@ export default function Dashboard() {
             <div className="flex items-center space-x-4">
               {/* 登出按钮：清除 access_token 并跳转登录页 */}
               <button
-                onClick={() => {
-                  clearCookie("access_token")
-                  window.location.href = "/signin"
+                onClick={async () => {
+                  try {
+                    // 调用后端注销，清理 HttpOnly Cookie
+                    await fetch('/api/logout', { method: 'POST', credentials: 'include' })
+                  } catch {}
+                  // 兜底清理前端非 HttpOnly Cookie，并重置记住我
+                  clearCookie('access_token')
+                  clearCookie('refresh_token')
+                  document.cookie = `remember_me=false; path=/; samesite=lax; expires=${new Date('1970-01-01').toUTCString()}`
+                  window.location.href = '/signin'
                 }}
                 className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 border"
               >

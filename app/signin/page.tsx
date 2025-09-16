@@ -54,8 +54,42 @@ export default function SignInPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
   // 建议放在 form/submitting/error 这三行 useState 后面
-  type Dbg = { apiBase: string; token: string; tokenLen: number; url: string; status: string; err: string }
-  const [dbg, setDbg] = useState<Dbg>({ apiBase: API_BASE, token: "", tokenLen: 0, url: "", status: "", err: "" })
+  type Dbg = {
+    apiBase: string
+    token: string
+    tokenLen: number
+    url: string
+    status: string
+    err: string
+    origin: string
+    isHttps: boolean
+    isCrossOrigin: boolean
+    cookieEnabled: boolean
+    hasAccessTokenCookie: boolean
+    rememberMe: boolean
+    resUrl?: string
+    resType?: string
+    resRedirected?: boolean
+    resOk?: boolean
+    resStatusText?: string
+    resBodyPreview?: string
+    startedAt?: number
+    durationMs?: number
+  }
+  const [dbg, setDbg] = useState<Dbg>({
+    apiBase: API_BASE,
+    token: "",
+    tokenLen: 0,
+    url: "",
+    status: "",
+    err: "",
+    origin: typeof window !== "undefined" ? window.location.origin : "",
+    isHttps: typeof window !== "undefined" ? window.location.protocol === "https:" : false,
+    isCrossOrigin: false,
+    cookieEnabled: typeof navigator !== "undefined" ? navigator.cookieEnabled : false,
+    hasAccessTokenCookie: typeof document !== "undefined" ? /(?:^|; )access_token=/.test(document.cookie) : false,
+    rememberMe: false,
+  })
 
   const clearCookie = (name: string) => {
     if (typeof document === "undefined") return
@@ -64,25 +98,98 @@ export default function SignInPage() {
 
   //界面加载函数
   const recheck = async () => {
-    const rememberMe = getCookie("remember_me") === "true"
-    const token = getCookie("access_token")
-
-    setDbg((p) => ({ ...p, token: token || "", tokenLen: token ? token.length : 0, status: token ? "token-found" : "no-token", err: "", url: "" }))
-    //当token不存在或remmberMe不存在或为false时，不自动加载
-    if (!token || !rememberMe) return
-    const url = `${API_BASE}/me?token=${encodeURIComponent(token)}`
-    setDbg((p) => ({ ...p, url, status: "requesting" }))
+    const origin = typeof window !== "undefined" ? window.location.origin : ""
+  const rememberMe = getCookie("remember_me") === "true"
+  // 注意：access_token 可能为 HttpOnly，JS 无法读取
+  const token = getCookie("access_token")
+    const cookieEnabled = typeof navigator !== "undefined" ? navigator.cookieEnabled : false
+    const hasAccessTokenCookie = typeof document !== "undefined" ? /(?:^|; )access_token=/.test(document.cookie) : false
+    let isCrossOrigin = false
     try {
-      const r = await fetch(url, { credentials: "include" })
-      console.log("[signin] /me status:", r.status)
-      setDbg((p) => ({ ...p, status: String(r.status) }))
+      const resolved = new URL(API_BASE, origin)
+      isCrossOrigin = resolved.origin !== origin
+    } catch {}
+
+    setDbg((p) => ({
+      ...p,
+      origin,
+      isHttps: origin.startsWith("https://"),
+      cookieEnabled,
+      hasAccessTokenCookie,
+      rememberMe,
+      token: token || "",
+      tokenLen: token ? token.length : 0,
+      status: token ? "token-found" : "no-token",
+      isCrossOrigin,
+      err: "",
+      url: "",
+      resUrl: undefined,
+      resType: undefined,
+      resRedirected: undefined,
+      resOk: undefined,
+      resStatusText: undefined,
+      resBodyPreview: undefined,
+      startedAt: undefined,
+      durationMs: undefined,
+    }))
+
+    // 基于 HttpOnly Cookie 的自动登录：只要 rememberMe=true 就尝试 /me
+    if (!rememberMe) {
+      console.log("[signin] recheck: skip auto-login | rememberMe?", rememberMe)
+      return
+    }
+
+    // 优先使用 Cookie 鉴权，不依赖前端读取 token
+    const url = `${API_BASE}/me`
+    const startedAt = (typeof performance !== "undefined" ? performance.now() : Date.now()) as number
+    setDbg((p) => ({ ...p, url, status: "requesting", startedAt }))
+  const reqInit: RequestInit = { credentials: "include" }
+    console.log("[signin] recheck -> fetch", { url, reqInit, origin, apiBase: API_BASE, isCrossOrigin })
+    try {
+      const r = await fetch(url, reqInit)
+      const duration = ((typeof performance !== "undefined" ? performance.now() : Date.now()) as number) - startedAt
+      const bodyText = await r.text().catch(() => "")
+      let preview = bodyText ? bodyText.slice(0, 300) : ""
+      // 尝试格式化 JSON，便于观察错误结构
+      try {
+        const j = bodyText ? JSON.parse(bodyText) : null
+        if (j) preview = JSON.stringify(j, null, 2).slice(0, 500)
+      } catch {}
+
+      console.log("[signin] /me response", {
+        status: r.status,
+        statusText: r.statusText,
+        ok: r.ok,
+        type: r.type,
+        redirected: r.redirected,
+        url: r.url,
+        durationMs: Math.round(duration),
+        preview,
+      })
+
+      setDbg((p) => ({
+        ...p,
+        status: String(r.status),
+        resUrl: r.url,
+        resType: r.type,
+        resRedirected: r.redirected,
+        resOk: r.ok,
+        resStatusText: r.statusText,
+        resBodyPreview: preview,
+        durationMs: Math.round(duration),
+      }))
+
       if (r.ok) {
-        await r.json()
+        // body 已经被读取为 text，不再二次解析
         window.location.href = "/dashboard"
       }
     } catch (e: any) {
       console.error("[signin] /me error:", e)
-      setDbg((p) => ({ ...p, err: e?.message || String(e), status: "error" }))
+      setDbg((p) => ({
+        ...p,
+        err: (e && (e.message || String(e))) || "fetch error",
+        status: "error",
+      }))
     }
   }
   //在组件加载时，自动调用 recheck 函数，尝试从 Cookie 中获取 access_token 并验证其有效性。
@@ -132,17 +239,45 @@ export default function SignInPage() {
       if (!token) throw new Error("未返回令牌")
       // 仅在勾选“记住密码”时写入持久化 cookie；否则不保存 cookie
       if (form.remember) {
+        // 初次写入：SameSite=Lax（默认），适合同源请求
         setCookie("remember_me", "true", 30)
         setCookie("access_token", token, 30)
+
+        // 写入后校验：若未成功，在 HTTPS 环境下回退为 SameSite=None; Secure
+        try {
+          const v1 = getCookie("access_token")
+          const ok1 = !!v1 && v1 === token
+          if (!ok1 && typeof window !== "undefined" && window.location.protocol === "https:") {
+            console.warn("[signin] access_token cookie not found after first write, retry with SameSite=None; Secure")
+            setCookie("access_token", token, 30, { sameSite: "None", secure: true })
+            const v2 = getCookie("access_token")
+            const ok2 = !!v2 && v2 === token
+            if (!ok2) {
+              console.error("[signin] access_token cookie still missing after retry. Check domain/path/third-party cookie policies.")
+            } else {
+              console.info("[signin] access_token cookie set successfully after retry (SameSite=None; Secure)")
+            }
+          } else if (!ok1) {
+            console.warn("[signin] access_token cookie not set and page is not HTTPS; cannot apply Secure cookie. Consider enabling HTTPS.")
+          } else {
+            console.info("[signin] access_token cookie set successfully (first write)")
+          }
+        } catch (e) {
+          console.error("[signin] cookie verification failed:", e)
+        }
+
+        // 更新调试面板的可见状态
+        setDbg((p) => ({
+          ...p,
+          hasAccessTokenCookie: typeof document !== "undefined" ? /(?:^|; )access_token=/.test(document.cookie) : p.hasAccessTokenCookie,
+          token,
+          tokenLen: token.length,
+        }))
       } else {
         setCookie("remember_me", "false", 1)
         setCookie("access_token", token, 1)
       }
-        setCookie("access_token", token, 30)
-        window.location.href = "/dashboard"
-      
-        window.location.href = "/dashboard"
-        // clearCookie("access_token")
+      window.location.href = "/dashboard"
       
     } catch (err: any) {
       setError(err?.message || "登录失败")

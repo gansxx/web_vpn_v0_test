@@ -9,8 +9,8 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-accent/10 rounded-3xl border border-primary/20 shadow-2xl shadow-primary/10 m-4">
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 rounded-t-3xl">
+    <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-accent/10">
+      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 items-center justify-between px-6">
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
@@ -54,7 +54,7 @@ export default function HomePage() {
         </div>
       </header>
 
-      <section className="py-24 px-6 relative overflow-hidden">
+      <section className="py-24 px-6 relative overflow-hidden bg-gradient-to-b from-transparent via-primary/5 to-transparent">
         <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-transparent to-accent/10 pointer-events-none"></div>
         <div className="container mx-auto text-center max-w-4xl relative z-10">
           <div className="animate-fade-in-up">
@@ -77,7 +77,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section id="features" className="py-20 px-6 bg-gradient-to-b from-muted/30 via-muted/20 to-background">
+      <section id="features" className="py-20 px-6 bg-gradient-to-b from-transparent via-muted/30 to-transparent">
         <div className="container mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">为什么选择我们</h2>
@@ -136,7 +136,10 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section id="services" className="py-20 px-6 relative overflow-hidden">
+      <section
+        id="services"
+        className="py-20 px-6 relative overflow-hidden bg-gradient-to-b from-transparent via-primary/3 to-transparent"
+      >
         <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 via-transparent to-accent/5 pointer-events-none"></div>
         <div className="container mx-auto relative z-10">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
@@ -147,19 +150,19 @@ export default function HomePage() {
               </p>
               <div className="space-y-4">
                 <div className="flex items-center space-x-3">
-                  <div className="w-2 h-2 bg-primary rounded-full"></div>
+                  <div className="w-2 h-2 bg-primary rounded-full flex items-center justify-center"></div>
                   <span className="text-foreground">海外视频流媒体</span>
                 </div>
                 <div className="flex items-center space-x-3">
-                  <div className="w-2 h-2 bg-primary rounded-full"></div>
+                  <div className="w-2 h-2 bg-primary rounded-full flex items-center justify-center"></div>
                   <span className="text-foreground">游戏加速优化</span>
                 </div>
                 <div className="flex items-center space-x-3">
-                  <div className="w-2 h-2 bg-primary rounded-full"></div>
+                  <div className="w-2 h-2 bg-primary rounded-full flex items-center justify-center"></div>
                   <span className="text-foreground">跨境电商业务</span>
                 </div>
                 <div className="flex items-center space-x-3">
-                  <div className="w-2 h-2 bg-primary rounded-full"></div>
+                  <div className="w-2 h-2 bg-primary rounded-full flex items-center justify-center"></div>
                   <span className="text-foreground">学术研究资料</span>
                 </div>
               </div>
@@ -186,7 +189,7 @@ export default function HomePage() {
                   <Card className="p-4 hover:shadow-lg transition-all duration-300">
                     <div className="w-8 h-8 bg-blue-900 rounded-lg mb-2 flex items-center justify-center">
                       <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M11.979 0C5.678 0 .511 5.158.511 11.479c0 6.321 5.167 11.488 11.468 11.488 6.321 0 11.488-5.167 11.488-11.488C23.467 5.158 18.3.001 11.979 0zM5.54 20.822l6.956-3.583c.461.794 1.338 1.338 2.328 1.338.461 0 .896-.126 1.277-.334l6.956 3.583c-1.845 1.845-4.267 2.328-6.956 2.328-2.689 0-5.111-.483-6.956-2.328zm15.822-3.583l-6.956-3.583c-.461-.794-1.338-1.338-2.328-1.338-.461 0-.896.126-1.277.334L4.845 16.235c1.845-1.845 4.267-2.328 6.956-2.328 2.689 0 5.111.483 6.956 2.328z" />
+                        <path d="M17.523 15.3414c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.5511 0 .9993.4482.9993.9993.0001.5511-.4482.9997-.9993.9997m-11.046 0c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.5511 0 .9993.4482.9993.9993 0 .5511-.4482.9997-.9993.9997m11.4045-6.02l1.9973-3.4592a.416.416 0 00-.1518-.5972.416.416 0 00-.5972.1518l-2.0223 3.503C15.5902 8.2439 13.8533 7.8508 12 7.8508s-3.5902.3931-5.1333 1.0989L4.8442 5.4467a.4161.4161 0 00-.5972-.1518.416.416 0 00-.1518.5972L6.0927 9.3214C2.8207 11.0806.9999 13.9222.9999 17.2623c0 .5511.4482.9993.9993.9993h19.0016c.5511 0 .9993-.4482.9993-.9993-.0001-3.3401-1.8209-6.1817-5.0929-7.9409z" />
                       </svg>
                     </div>
                     <div className="text-sm font-medium">Steam</div>
@@ -206,7 +209,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section id="pricing" className="py-20 px-6 bg-gradient-to-b from-muted/20 via-background to-muted/20">
+      <section id="pricing" className="py-20 px-6 bg-gradient-to-b from-transparent via-muted/20 to-transparent">
         <div className="container mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">选择适合您的套餐</h2>
@@ -362,7 +365,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section id="download" className="py-20 px-6 bg-gradient-to-b from-background via-muted/20 to-muted/30">
+      <section id="download" className="py-20 px-6 bg-gradient-to-b from-transparent via-muted/20 to-muted/30">
         <div className="container mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">立即开始使用</h2>
@@ -429,7 +432,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <footer className="bg-gradient-to-r from-primary via-primary to-accent text-primary-foreground py-12 px-6 rounded-b-3xl">
+      <footer className="bg-gradient-to-r from-primary via-primary to-accent text-primary-foreground py-12 px-6">
         <div className="container mx-auto">
           <div className="grid md:grid-cols-4 gap-8">
             <div>

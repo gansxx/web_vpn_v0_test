@@ -26,7 +26,7 @@ export async function middleware(req: NextRequest) {
   }
 
   // 仅保护 /dashboard 及其子路径
-  if (pathname.startsWith("/dashboard")) {
+  if (pathname.startsWith("/dahboard")) {
     console.log("req:",req)
     const cookie = req.cookies.get("access_token");
     const token = cookie?.value ?? null;

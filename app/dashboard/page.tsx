@@ -1,6 +1,8 @@
 "use client"
 
 import { useState } from "react"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
 
 // 清除指定名称的认证 cookie，用于执行登出
 function clearCookie(name: string) {
@@ -11,6 +13,7 @@ function clearCookie(name: string) {
 
 export default function Dashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [showPricing, setShowPricing] = useState(false)
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -46,7 +49,10 @@ export default function Dashboard() {
             <span>主页</span>
           </a>
 
-          <a href="#" className="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-lg hover:bg-gray-100">
+          <button
+            onClick={() => setShowPricing(true)}
+            className="w-full flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-lg hover:bg-gray-100"
+          >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 strokeLinecap="round"
@@ -56,7 +62,7 @@ export default function Dashboard() {
               />
             </svg>
             <span>套餐购买</span>
-          </a>
+          </button>
 
           <a href="#" className="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-lg hover:bg-gray-100">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -197,13 +203,13 @@ export default function Dashboard() {
                 onClick={async () => {
                   try {
                     // 调用后端注销，清理 HttpOnly Cookie
-                    await fetch('/api/logout', { method: 'POST', credentials: 'include' })
+                    await fetch("/api/logout", { method: "POST", credentials: "include" })
                   } catch {}
                   // 兜底清理前端非 HttpOnly Cookie，并重置记住我
-                  clearCookie('access_token')
-                  clearCookie('refresh_token')
-                  document.cookie = `remember_me=false; path=/; samesite=lax; expires=${new Date('1970-01-01').toUTCString()}`
-                  window.location.href = '/signin'
+                  clearCookie("access_token")
+                  clearCookie("refresh_token")
+                  document.cookie = `remember_me=false; path=/; samesite=lax; expires=${new Date("1970-01-01").toUTCString()}`
+                  window.location.href = "/signin"
                 }}
                 className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 border"
               >
@@ -351,6 +357,132 @@ export default function Dashboard() {
           </button>
         </div>
       </div>
+
+      {/* Pricing Modal */}
+      {showPricing && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200 flex items-center justify-between">
+              <h2 className="text-2xl font-bold text-gray-900">选择套餐</h2>
+              <button
+                onClick={() => setShowPricing(false)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="p-6">
+              <div className="grid md:grid-cols-2 gap-6">
+                {/* Free Plan */}
+                <Card className="relative overflow-hidden border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-white">
+                  <CardContent className="p-6">
+                    <div className="text-center mb-6">
+                      <h3 className="text-2xl font-bold text-gray-900 mb-2">免费套餐</h3>
+                      <div className="text-4xl font-bold text-blue-600 mb-2">¥0</div>
+                      <p className="text-gray-600">测试期间免费使用</p>
+                    </div>
+
+                    <div className="space-y-4 mb-8">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center">
+                          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                        <span className="text-gray-900 font-medium">使用量：无限制</span>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <div className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center">
+                          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                        <span className="text-gray-900 font-medium">使用时间：测试期间</span>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <div className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center">
+                          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                        <span className="text-gray-900">基础节点访问</span>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <div className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center">
+                          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                        <span className="text-gray-900">多平台支持</span>
+                      </div>
+                    </div>
+
+                    <Button className="w-full bg-blue-600 hover:bg-blue-700" size="lg">
+                      立即开始
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                {/* Premium Plan */}
+                <Card className="relative overflow-hidden border-2 border-orange-200 bg-gradient-to-br from-orange-50 to-white">
+                  <div className="absolute top-0 right-0 bg-orange-500 text-white px-3 py-1 text-sm font-medium rounded-bl-lg">
+                    即将推出
+                  </div>
+                  <CardContent className="p-6">
+                    <div className="text-center mb-6">
+                      <h3 className="text-2xl font-bold text-gray-900 mb-2">付费套餐</h3>
+                      <div className="text-4xl font-bold text-orange-600 mb-2">待推出</div>
+                      <p className="text-gray-600">更多高级功能</p>
+                    </div>
+
+                    <div className="space-y-4 mb-8">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center">
+                          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                        <span className="text-gray-900">免费套餐所有功能</span>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <div className="w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center">
+                          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                        <span className="text-gray-900">高速专线节点</span>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <div className="w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center">
+                          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                        <span className="text-gray-900">优先技术支持</span>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <div className="w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center">
+                          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                        <span className="text-gray-900">高级功能解锁</span>
+                      </div>
+                    </div>
+
+                    <Button variant="outline" className="w-full bg-transparent" size="lg" disabled>
+                      敬请期待
+                    </Button>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Sidebar Overlay for Mobile */}
       {sidebarOpen && (

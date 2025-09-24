@@ -1,8 +1,10 @@
 "use client"
 
-import { useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { PLANS } from "@/lib/plans"
+import { API_BASE } from "@/lib/config"
 
 // 清除指定名称的认证 cookie，用于执行登出
 function clearCookie(name: string) {
@@ -14,18 +16,159 @@ function clearCookie(name: string) {
 export default function Dashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [activeSection, setActiveSection] = useState("dashboard")
+  // 用户已购产品列表
+  type ProductItem = {
+    product_name: string
+    subscription_url?: string
+    email?: string
+    phone?: string
+    buy_time?: string
+    end_time?: string
+  }
+  const [products, setProducts] = useState<ProductItem[]>([])
+  const [loadingProducts, setLoadingProducts] = useState(false)
+  const [productsError, setProductsError] = useState<string | null>(null)
+  // 购买免费套餐状态
+  const [purchasingFreePlan, setPurchasingFreePlan] = useState(false)
+  // 订单列表
+  type OrderItem = {
+    id: string
+    date?: string
+    amount?: string | number
+    status?: string
+    plan?: string
+    raw?: any
+  }
+  const [orders, setOrders] = useState<OrderItem[]>([])
+  const [loadingOrders, setLoadingOrders] = useState(false)
+  const [ordersError, setOrdersError] = useState<string | null>(null)
+  // 日期格式化与排序工具
+  const fmtDate = (v?: string) => {
+    try {
+      const t = v ? Date.parse(v) : NaN
+      return Number.isFinite(t) ? new Date(t).toLocaleString() : (v || "")
+    } catch {
+      return v || ""
+    }
+  }
+  const sortedOrders = useMemo(() => {
+    const parseTs = (v?: string) => {
+      const t = v ? Date.parse(v) : NaN
+      return Number.isFinite(t) ? t : -Infinity
+    }
+    return [...orders].sort((a, b) => parseTs(b.date) - parseTs(a.date))
+  }, [orders])
+  // 按购买时间倒序排序（最近的在前）
+  const sortedProducts = useMemo(() => {
+    const parseTs = (v?: string) => {
+      const t = v ? Date.parse(v) : NaN
+      return Number.isFinite(t) ? t : -Infinity
+    }
+    return [...products].sort((a, b) => parseTs(b.buy_time) - parseTs(a.buy_time))
+  }, [products])
 
-  const mockOrders = [
-    { id: "ORD001", date: "2024-01-15", amount: "¥99", status: "已完成", plan: "基础套餐" },
-    { id: "ORD002", date: "2024-01-10", amount: "¥199", status: "处理中", plan: "高级套餐" },
-    { id: "ORD003", date: "2024-01-05", amount: "¥299", status: "已完成", plan: "专业套餐" },
-  ]
+  // 已移除 mockOrders，订单仅展示后端真实数据
 
   const mockTickets = [
     { id: "TIC001", title: "连接问题", status: "已解决", date: "2024-01-14", priority: "高" },
     { id: "TIC002", title: "账户充值", status: "处理中", date: "2024-01-12", priority: "中" },
     { id: "TIC003", title: "功能咨询", status: "已关闭", date: "2024-01-08", priority: "低" },
   ]
+
+  // 拉取当前登录用户产品信息（基于 Cookie 的会话）
+  const reloadProducts = useCallback(async () => {
+    setLoadingProducts(true)
+    setProductsError(null)
+    try {
+      const r = await fetch(`${API_BASE}/user/products`, { credentials: "include" })
+      if (!r.ok) {
+        throw new Error(`加载失败: ${r.status}`)
+      }
+      const data = await r.json()
+      setProducts(Array.isArray(data) ? data : [])
+    } catch (e: any) {
+      setProductsError(e?.message || "加载失败")
+    } finally {
+      setLoadingProducts(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    reloadProducts()
+  }, [reloadProducts])
+
+  // 拉取订单列表
+  const reloadOrders = useCallback(async () => {
+    setLoadingOrders(true)
+    setOrdersError(null)
+    try {
+      const r = await fetch(`${API_BASE}/user/orders`, { credentials: "include" })
+      if (!r.ok) throw new Error(`加载失败: ${r.status}`)
+      const data = await r.json()
+      const list: any[] = Array.isArray(data) ? data : []
+      // 映射后端多样字段到统一展示结构
+      const mapped: OrderItem[] = list.map((o: any, idx: number) => {
+        const id = o.order_id || o.id || o.transaction_id || `ORD-${idx + 1}`
+        const date = o.created_at || o.buy_time || o.date || o.paid_at || o.updated_at || ""
+        const plan = o.plan || o.plan_name || o.product_name || o.title || "—"
+        const rawAmount = o.amount ?? o.price ?? o.total ?? o.amount_cny ?? o.amount_usd
+        const status = o.status || o.state || o.pay_status || "—"
+        return { id: String(id), date: date ? String(date) : "", plan: String(plan), amount: rawAmount, status: String(status), raw: o }
+      })
+      setOrders(mapped)
+    } catch (e: any) {
+      setOrdersError(e?.message || "加载失败")
+    } finally {
+      setLoadingOrders(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    reloadOrders()
+  }, [reloadOrders])
+
+  // 购买套餐
+  const purchasePlan = useCallback(async (plan: any) => {
+    setPurchasingFreePlan(true)
+    try {
+      // 调用购买API
+      const purchaseResponse = await fetch(`${API_BASE}/user/free-plan/purchase`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          phone: "", // 可以根据需要收集用户手机号
+          plan_id: plan.id,
+          plan_name: plan.name,
+          duration_days: plan.id === "free" ? 30 : 365 // 免费套餐30天，其他套餐365天
+        }),
+        credentials: "include"
+      })
+
+      if (!purchaseResponse.ok) {
+        const errorData = await purchaseResponse.json()
+        throw new Error(errorData.detail || `购买失败: ${purchaseResponse.status}`)
+      }
+
+      const purchaseData = await purchaseResponse.json()
+
+      if (purchaseData.success) {
+        alert(`${purchaseData.plan_name}获取成功！`)
+        // 刷新产品列表
+        reloadProducts()
+        // 刷新订单列表
+        reloadOrders()
+      } else {
+        alert(purchaseData.message || "购买失败")
+      }
+    } catch (e: any) {
+      console.error("购买套餐失败:", e)
+      alert(e?.message || "购买失败，请重试")
+    } finally {
+      setPurchasingFreePlan(false)
+    }
+  }, [reloadProducts, reloadOrders])
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -118,7 +261,7 @@ export default function Dashboard() {
             <span>文档中心</span>
           </a>
 
-          <a href="#" className="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-lg hover:bg-gray-100">
+          {/* <a href="#" className="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-lg hover:bg-gray-100">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 strokeLinecap="round"
@@ -177,7 +320,7 @@ export default function Dashboard() {
               />
             </svg>
             <span>苹果账号</span>
-          </a>
+          </a> */}
         </nav>
       </div>
 
@@ -249,7 +392,7 @@ export default function Dashboard() {
                 <div className="relative z-10 flex items-center justify-between">
                   <div className="space-y-4">
                     <h1 className="text-2xl font-bold">
-                      欢迎使用帕克云，使用教程请参考文档中心，
+                      欢迎使用Z加速，使用教程请参考文档中心，
                       <br />
                       若有疑问可提交工单或联系右下角客服～
                     </h1>
@@ -284,22 +427,73 @@ export default function Dashboard() {
                 <div className="lg:col-span-2">
                   <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-8 text-white relative overflow-hidden">
                     <div className="relative z-10">
-                      <div className="flex items-center space-x-3 mb-6">
-                        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
-                          />
-                        </svg>
-                        <h2 className="text-2xl font-bold">开通套餐</h2>
+                      <div className="flex items-center justify-between mb-6">
+                        <div className="flex items-center space-x-3">
+                          <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+                            />
+                          </svg>
+                          <h2 className="text-2xl font-bold">我的套餐</h2>
+                        </div>
+                        <Button
+                          onClick={reloadProducts}
+                          disabled={loadingProducts}
+                          className="bg-white text-gray-900 hover:bg-gray-100 border border-transparent"
+                        >
+                          {loadingProducts ? "刷新中..." : "刷新"}
+                        </Button>
                       </div>
-                      <p className="text-gray-300 mb-6">您还没有激活的套餐</p>
-                      <p className="text-gray-400 mb-8">立即开通套餐选择适合的服务</p>
-                      <button className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors">
-                        兑换礼品卡
-                      </button>
+
+                      {loadingProducts && (
+                        <p className="text-gray-300">正在加载...</p>
+                      )}
+
+                      {!loadingProducts && productsError && (
+                        <p className="text-red-300">{productsError}</p>
+                      )}
+
+                      {!loadingProducts && !productsError && products.length === 0 && (
+                        <>
+                          <p className="text-gray-300 mb-6">您还没有激活的套餐</p>
+                          <p className="text-gray-400 mb-8">立即开通套餐选择适合的服务</p>
+                          <button className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors">
+                            兑换礼品卡
+                          </button>
+                        </>
+                      )}
+
+                      {!loadingProducts && !productsError && sortedProducts.length > 0 && (
+                        <div className="bg-white/5 rounded-lg overflow-hidden">
+                          <div className="max-h-80 overflow-y-auto">
+                            <table className="w-full">
+                              <thead className="bg-white/10 sticky top-0 z-10">
+                                <tr>
+                                  <th className="px-4 py-3 text-left text-sm font-medium">套餐名</th>
+                                  <th className="px-4 py-3 text-left text-sm font-medium">购买时间</th>
+                                  <th className="px-4 py-3 text-left text-sm font-medium">到期时间</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {sortedProducts.map((p, idx) => (
+                                  <tr key={idx} className="border-t border-white/10">
+                                    <td className="px-4 py-3 text-sm">{p.product_name || "-"}</td>
+                                    <td className="px-4 py-3 text-sm text-gray-300">
+                                      {p.buy_time ? new Date(p.buy_time).toLocaleString() : "-"}
+                                    </td>
+                                    <td className="px-4 py-3 text-sm text-gray-300">
+                                      {p.end_time ? new Date(p.end_time).toLocaleString() : "-"}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      )}
                     </div>
                     {/* Background decoration */}
                     <div className="absolute top-0 right-0 w-48 h-48 bg-white bg-opacity-5 rounded-full -translate-y-24 translate-x-24"></div>
@@ -372,108 +566,54 @@ export default function Dashboard() {
               </div>
 
               <div className="grid md:grid-cols-2 gap-6">
-                {/* Free Plan */}
-                <Card className="relative overflow-hidden border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-white">
-                  <CardContent className="p-6">
-                    <div className="text-center mb-6">
-                      <h3 className="text-2xl font-bold text-gray-900 mb-2">免费套餐</h3>
-                      <div className="text-4xl font-bold text-blue-600 mb-2">¥0</div>
-                      <p className="text-gray-600">测试期间免费使用</p>
-                    </div>
-
-                    <div className="space-y-4 mb-8">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center">
-                          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
+                {PLANS.map((plan) => {
+                  const s = plan.styles?.dashboard
+                  const border = s?.cardBorder ?? "border-gray-200"
+                  const bg = s?.cardBg ?? "bg-white"
+                  const priceClass = s?.priceText ?? "text-gray-900"
+                  const dotBg = s?.featureDotBg ?? "bg-gray-600"
+                  const dotIcon = s?.featureDotIcon ?? "text-white"
+                  const btnVariant = s?.buttonVariant ?? "default"
+                  const btnClass = s?.buttonClass ?? ""
+                  const badgeClass = s?.badgeClass ?? "bg-gray-500 text-white rounded-bl-lg"
+                  return (
+                    <Card key={plan.id} className={`relative overflow-hidden border-2 ${border} ${bg}`}>
+                      {plan.badgeText ? (
+                        <div className={`absolute top-0 right-0 px-3 py-1 text-sm font-medium ${badgeClass}`}>
+                          {plan.badgeText}
                         </div>
-                        <span className="text-gray-900 font-medium">使用量：无限制</span>
-                      </div>
-                      <div className="flex items-center space-x-3">
-                        <div className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center">
-                          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
+                      ) : null}
+                      <CardContent className="p-6">
+                        <div className="text-center mb-6">
+                          <h3 className="text-2xl font-bold text-gray-900 mb-2">{plan.name}</h3>
+                          <div className={`text-4xl font-bold mb-2 ${priceClass}`}>{plan.priceDisplay}</div>
+                          <p className="text-gray-600">{plan.description}</p>
                         </div>
-                        <span className="text-gray-900 font-medium">使用时间：测试期间</span>
-                      </div>
-                      <div className="flex items-center space-x-3">
-                        <div className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center">
-                          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
+                        <div className="space-y-4 mb-8">
+                          {plan.features.map((f, i) => (
+                            <div key={i} className="flex items-center space-x-3">
+                              <div className={`w-5 h-5 ${dotBg} rounded-full flex items-center justify-center`}>
+                                <svg className={`w-3 h-3 ${dotIcon}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                </svg>
+                              </div>
+                              <span className="text-gray-900">{f}</span>
+                            </div>
+                          ))}
                         </div>
-                        <span className="text-gray-900">基础节点访问</span>
-                      </div>
-                      <div className="flex items-center space-x-3">
-                        <div className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center">
-                          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
-                        </div>
-                        <span className="text-gray-900">多平台支持</span>
-                      </div>
-                    </div>
-
-                    <Button className="w-full bg-blue-600 hover:bg-blue-700" size="lg">
-                      立即开始
-                    </Button>
-                  </CardContent>
-                </Card>
-
-                {/* Premium Plan */}
-                <Card className="relative overflow-hidden border-2 border-orange-200 bg-gradient-to-br from-orange-50 to-white">
-                  <div className="absolute top-0 right-0 bg-orange-500 text-white px-3 py-1 text-sm font-medium rounded-bl-lg">
-                    即将推出
-                  </div>
-                  <CardContent className="p-6">
-                    <div className="text-center mb-6">
-                      <h3 className="text-2xl font-bold text-gray-900 mb-2">付费套餐</h3>
-                      <div className="text-4xl font-bold text-orange-600 mb-2">待推出</div>
-                      <p className="text-gray-600">更多高级功能</p>
-                    </div>
-
-                    <div className="space-y-4 mb-8">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center">
-                          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
-                        </div>
-                        <span className="text-gray-900">免费套餐所有功能</span>
-                      </div>
-                      <div className="flex items-center space-x-3">
-                        <div className="w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center">
-                          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
-                        </div>
-                        <span className="text-gray-900">高速专线节点</span>
-                      </div>
-                      <div className="flex items-center space-x-3">
-                        <div className="w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center">
-                          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
-                        </div>
-                        <span className="text-gray-900">优先技术支持</span>
-                      </div>
-                      <div className="flex items-center space-x-3">
-                        <div className="w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center">
-                          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
-                        </div>
-                        <span className="text-gray-900">高级功能解锁</span>
-                      </div>
-                    </div>
-
-                    <Button variant="outline" className="w-full bg-transparent" size="lg" disabled>
-                      敬请期待
-                    </Button>
-                  </CardContent>
-                </Card>
+                        <Button
+                          variant={btnVariant as any}
+                          className={`w-full ${btnClass}`}
+                          size="lg"
+                          disabled={plan.ctaDisabled || purchasingFreePlan}
+                          onClick={() => purchasePlan(plan)}
+                        >
+                          {purchasingFreePlan ? "处理中..." : plan.ctaText}
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  )
+                })}
               </div>
             </div>
           )}
@@ -482,7 +622,9 @@ export default function Dashboard() {
             <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <h1 className="text-3xl font-bold text-gray-900">订单列表</h1>
-                <Button className="bg-blue-600 hover:bg-blue-700">新建订单</Button>
+                <Button onClick={reloadOrders} disabled={loadingOrders} className="bg-blue-600 hover:bg-blue-700">
+                  {loadingOrders ? "刷新中..." : "刷新"}
+                </Button>
               </div>
 
               <Card>
@@ -512,34 +654,48 @@ export default function Dashboard() {
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
-                        {mockOrders.map((order) => (
-                          <tr key={order.id} className="hover:bg-gray-50">
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                              {order.id}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{order.date}</td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{order.plan}</td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{order.amount}</td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <span
-                                className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                                  order.status === "已完成"
-                                    ? "bg-green-100 text-green-800"
-                                    : order.status === "处理中"
-                                      ? "bg-yellow-100 text-yellow-800"
-                                      : "bg-gray-100 text-gray-800"
-                                }`}
-                              >
-                                {order.status}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              <Button variant="outline" size="sm">
-                                查看详情
-                              </Button>
-                            </td>
+                        {loadingOrders && (
+                          <tr>
+                            <td colSpan={6} className="px-6 py-8 text-center text-sm text-gray-500">正在加载订单...</td>
                           </tr>
-                        ))}
+                        )}
+                        {!loadingOrders && ordersError && (
+                          <tr>
+                            <td colSpan={6} className="px-6 py-8 text-center text-sm text-red-500">{ordersError}</td>
+                          </tr>
+                        )}
+                        {!loadingOrders && !ordersError && orders.length === 0 && (
+                          <tr>
+                            <td colSpan={6} className="px-6 py-8 text-center text-sm text-gray-500">暂无订单</td>
+                          </tr>
+                        )}
+                        {!loadingOrders && !ordersError && orders.length > 0 && (
+                          <>
+                            {sortedOrders.map((order) => {
+                              const amountDisplay = typeof order.amount === "number" ? `¥${order.amount}` : (order.amount || "—")
+                              const st = order.status || "—"
+                              const badgeClass = st.includes("完成") || st.toLowerCase().includes("paid")
+                                ? "bg-green-100 text-green-800"
+                                : st.includes("处理中") || st.toLowerCase().includes("pending")
+                                  ? "bg-yellow-100 text-yellow-800"
+                                  : "bg-gray-100 text-gray-800"
+                              return (
+                                <tr key={order.id} className="hover:bg-gray-50">
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{order.id}</td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{fmtDate(order.date)}</td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{order.plan || "—"}</td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{amountDisplay}</td>
+                                  <td className="px-6 py-4 whitespace-nowrap">
+                                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${badgeClass}`}>{st}</span>
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <Button variant="outline" size="sm">查看详情</Button>
+                                  </td>
+                                </tr>
+                              )
+                            })}
+                          </>
+                        )}
                       </tbody>
                     </table>
                   </div>

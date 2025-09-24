@@ -2,6 +2,7 @@
 
 import { useEffect, useState, FormEvent, ChangeEvent } from "react"
 import { API_BASE } from "@/lib/config"
+import Turnstile from "@/components/Turnstile"
 // cookie获取逻辑
 function getCookie(name: string): string | null {
   if (typeof document === "undefined") return null
@@ -49,6 +50,8 @@ export default function SignInPage() {
   const [form, setForm] = useState({ email: "", password: "", remember: true })
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // Turnstile token
+  const [tsToken, setTsToken] = useState<string>("")
   // 字段级错误：用于展示「请输入邮箱/密码」等前端校验
   const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({})
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
@@ -217,12 +220,16 @@ export default function SignInPage() {
       })
       return
     }
+    if (!tsToken) {
+      setError("请先完成人机验证")
+      return
+    }
     setSubmitting(true)
     setError(null)
     try {
       const r = await fetch(`${API_BASE}/login`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "cf-turnstile-response": tsToken },
         body: JSON.stringify({ email: form.email, password: form.password }),
       })
       // 将后端返回的错误信息透出到界面
@@ -298,12 +305,12 @@ export default function SignInPage() {
                 <div className="absolute top-1 left-1 w-2 h-2 bg-white rounded-full"></div>
               </div>
             </div>
-            <span className="text-gray-900 text-2xl font-bold">帕克云</span>
+            <span className="text-gray-900 text-2xl font-bold">Z加速</span>
           </div>
 
-          <p className="text-gray-600 text-sm mb-2">
+          {/* <p className="text-gray-600 text-sm mb-2">
             永久导航页 <span className="text-blue-600">[帕克加速.com]</span> 保存防丢
-          </p>
+          </p> */}
         </div>
 
         {/* Sign In Form */}
@@ -337,6 +344,14 @@ export default function SignInPage() {
                 placeholder=""
               />
               {fieldErrors.email && <p className="mt-1 text-sm text-red-600">{fieldErrors.email}</p>}
+            </div>
+
+            {/* Turnstile Widget */}
+            <div>
+              <Turnstile onVerify={setTsToken} onExpire={() => setTsToken("")} onError={() => setTsToken("")} />
+              {!tsToken && (
+                <p className="text-xs text-gray-500 mt-1">请通过人机验证后再提交</p>
+              )}
             </div>
 
             <div>
@@ -404,7 +419,7 @@ export default function SignInPage() {
             <div className="space-y-3">
               <button
                 type="submit"
-                disabled={submitting}
+                disabled={submitting || !tsToken}
                 className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
               >
                 {submitting ? "登录中..." : "登录"}
@@ -420,6 +435,7 @@ export default function SignInPage() {
           </form>
         </div>
         <div className="mt-6 p-3 text-xs rounded bg-gray-50 border">
+          <div>Turnstile: {tsToken ? `${tsToken.slice(0, 8)}...` : "(未获取)"}</div>
           <div>API_BASE: {dbg.apiBase}</div>
           <div>tokenLen: {dbg.tokenLen} {dbg.tokenLen ? "✅" : "❌"}</div>
           <div>url: {dbg.url || "(未发起)"}</div>

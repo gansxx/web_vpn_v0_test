@@ -2,6 +2,7 @@
 
 import { useState, FormEvent, ChangeEvent } from "react"
 import { API_BASE } from "@/lib/config"
+import Turnstile from "@/components/Turnstile"
 
 export default function recallpage(){
     const [formData, setFormData] = useState({
@@ -17,6 +18,7 @@ export default function recallpage(){
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isCodeSent, setIsCodeSent] = useState(false)
   const [countdown, setCountdown] = useState(0)
+  const [tsToken, setTsToken] = useState<string>("")
   
   // 新密码一致性校验：两次密码不一致时给提示
   const validatePasswords = () => {
@@ -35,9 +37,13 @@ export default function recallpage(){
       setErrors({ email: "请先输入邮箱地址" })
       return
     }
+    if (!tsToken) {
+      setErrors({ email: "请先完成人机验证" })
+      return
+    }
     const res = await fetch(`${API_BASE}/recall`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "cf-turnstile-response": tsToken },
       body: JSON.stringify({ email: formData.email }),
       credentials: "include",
     })
@@ -81,7 +87,7 @@ export default function recallpage(){
       console.log("发送重置密码请求到:", `${API_BASE}/recall/reset`)
       const res = await fetch(`${API_BASE}/recall/reset`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "cf-turnstile-response": tsToken },
         body: JSON.stringify({ 
           email: formData.email, 
           code: formData.code,
@@ -136,7 +142,7 @@ export default function recallpage(){
                 <div className="absolute top-1 left-1 w-2 h-2 bg-white rounded-full"></div>
               </div>
             </div>
-            <span className="text-gray-900 text-2xl font-bold">帕克云</span>
+            <span className="text-gray-900 text-2xl font-bold">Z加速</span>
           </div>
 
           <p className="text-gray-600 text-sm mb-2">
@@ -151,6 +157,11 @@ export default function recallpage(){
           </div>
 
           <form className="space-y-6" onSubmit={onSubmit}>
+            {/* Turnstile Widget */}
+            <div>
+              <Turnstile onVerify={setTsToken} onExpire={() => setTsToken("")} onError={() => setTsToken("")} />
+              {!tsToken && <p className="text-xs text-gray-500 mt-1">请通过人机验证后再操作</p>}
+            </div>
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
                 电子邮件地址
@@ -312,6 +323,7 @@ export default function recallpage(){
               {submitError && <div className="text-sm text-red-600">{submitError}</div>}
               <button
                 type="submit"
+                disabled={!tsToken}
                 className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
                 onClick={() => console.log("重置密码按钮被点击")}
               >

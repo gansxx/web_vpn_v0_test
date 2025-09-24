@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { PLANS } from "@/lib/plans"
 
 export default function HomePage() {
   const scrollToSection = (id: string) => {
@@ -67,9 +68,9 @@ export default function HomePage() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button size="lg" className="text-lg px-8">
-                免费试用
+                <a href="/signin">免费试用</a>
               </Button>
-              <Button variant="outline" size="lg" className="text-lg px-8 bg-transparent">
+              <Button onClick={() => scrollToSection("features")} variant="outline" size="lg" className="text-lg px-8 bg-transparent">
                 了解更多
               </Button>
             </div>
@@ -217,150 +218,53 @@ export default function HomePage() {
           </div>
 
           <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            {/* Free Plan */}
-            <Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-300 border-2 border-primary/20">
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-              <CardContent className="p-8 relative z-10">
-                <div className="text-center mb-6">
-                  <h3 className="text-2xl font-bold text-foreground mb-2">免费套餐</h3>
-                  <div className="text-4xl font-bold text-primary mb-2">¥0</div>
-                  <p className="text-muted-foreground">测试期间免费使用</p>
-                </div>
-
-                <div className="space-y-4 mb-8">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center">
-                      <svg
-                        className="w-3 h-3 text-primary-foreground"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
+            {PLANS.map((plan) => {
+              const s = plan.styles?.home
+              const border = s?.cardBorder ?? "border-muted"
+              const overlayFrom = s?.overlay ?? "from-muted/10"
+              const priceClass = s?.priceText ?? "text-foreground"
+              const dotBg = s?.featureDotBg ?? "bg-muted"
+              const dotIcon = s?.featureDotIcon ?? "text-foreground"
+              const btnVariant = s?.buttonVariant ?? "default"
+              const btnClass = s?.buttonClass ?? ""
+              return (
+                <Card key={plan.id} className={`relative overflow-hidden group hover:shadow-xl transition-all duration-300 border-2 ${border}`}>
+                  {plan.badgeText ? (
+                    <div className="absolute top-0 right-0 bg-accent text-accent-foreground px-3 py-1 text-sm font-medium">
+                      {plan.badgeText}
                     </div>
-                    <span className="text-foreground">使用量：无限制</span>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center">
-                      <svg
-                        className="w-3 h-3 text-primary-foreground"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
+                  ) : null}
+                  <div className={`absolute inset-0 bg-gradient-to-br ${overlayFrom} to-transparent opacity-0 group-hover:opacity-100 transition-opacity`}></div>
+                  <CardContent className="p-8 relative z-10">
+                    <div className="text-center mb-6">
+                      <h3 className="text-2xl font-bold text-foreground mb-2">{plan.name}</h3>
+                      <div className={`text-4xl font-bold mb-2 ${priceClass}`}>{plan.priceDisplay}</div>
+                      <p className="text-muted-foreground">{plan.description}</p>
                     </div>
-                    <span className="text-foreground">使用时间：测试期间</span>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center">
-                      <svg
-                        className="w-3 h-3 text-primary-foreground"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
+                    <div className="space-y-4 mb-8">
+                      {plan.features.map((f, i) => (
+                        <div key={i} className="flex items-center space-x-3">
+                          <div className={`w-5 h-5 ${dotBg} rounded-full flex items-center justify-center`}>
+                            <svg className={`w-3 h-3 ${dotIcon}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                          </div>
+                          <span className="text-foreground">{f}</span>
+                        </div>
+                      ))}
                     </div>
-                    <span className="text-foreground">基础节点访问</span>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center">
-                      <svg
-                        className="w-3 h-3 text-primary-foreground"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
-                    <span className="text-foreground">多平台支持</span>
-                  </div>
-                </div>
-
-                <Button className="w-full" size="lg">
-                  立即开始
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Premium Plan */}
-            <Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-300 border-2 border-accent/50">
-              <div className="absolute top-0 right-0 bg-accent text-accent-foreground px-3 py-1 text-sm font-medium">
-                即将推出
-              </div>
-              <div className="absolute inset-0 bg-gradient-to-br from-accent/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-              <CardContent className="p-8 relative z-10">
-                <div className="text-center mb-6">
-                  <h3 className="text-2xl font-bold text-foreground mb-2">付费套餐</h3>
-                  <div className="text-4xl font-bold text-accent mb-2">待推出</div>
-                  <p className="text-muted-foreground">更多高级功能</p>
-                </div>
-
-                <div className="space-y-4 mb-8">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-5 h-5 bg-accent rounded-full flex items-center justify-center">
-                      <svg
-                        className="w-3 h-3 text-accent-foreground"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
-                    <span className="text-foreground">免费套餐所有功能</span>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <div className="w-5 h-5 bg-accent rounded-full flex items-center justify-center">
-                      <svg
-                        className="w-3 h-3 text-accent-foreground"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
-                    <span className="text-foreground">高速专线节点</span>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <div className="w-5 h-5 bg-accent rounded-full flex items-center justify-center">
-                      <svg
-                        className="w-3 h-3 text-accent-foreground"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
-                    <span className="text-foreground">优先技术支持</span>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <div className="w-5 h-5 bg-accent rounded-full flex items-center justify-center">
-                      <svg
-                        className="w-3 h-3 text-accent-foreground"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
-                    <span className="text-foreground">高级功能解锁</span>
-                  </div>
-                </div>
-
-                <Button variant="outline" className="w-full bg-transparent" size="lg" disabled>
-                  敬请期待
-                </Button>
-              </CardContent>
-            </Card>
+                    <Button
+                      variant={btnVariant as any}
+                      className={`w-full ${btnClass}`}
+                      size="lg"
+                      disabled={plan.ctaDisabled}
+                    >
+                      {plan.ctaText}
+                    </Button>
+                  </CardContent>
+                </Card>
+              )
+            })}
           </div>
         </div>
       </section>

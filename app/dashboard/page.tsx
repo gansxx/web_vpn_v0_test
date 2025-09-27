@@ -4,7 +4,9 @@ import { useCallback, useEffect, useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { PLANS } from "@/lib/plans"
-import { API_BASE } from "@/lib/config"
+import { API_BASE, DEV_MODE_ENABLED, IS_DEVELOPMENT } from "@/lib/config"
+import TicketForm from "@/components/ticket-form"
+import DeveloperModePanel from "@/components/developer-mode-panel"
 
 // 清除指定名称的认证 cookie，用于执行登出
 function clearCookie(name: string) {
@@ -16,6 +18,7 @@ function clearCookie(name: string) {
 export default function Dashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [activeSection, setActiveSection] = useState("dashboard")
+  const [showTicketForm, setShowTicketForm] = useState(false)
   // 用户已购产品列表
   type ProductItem = {
     product_name: string
@@ -42,6 +45,18 @@ export default function Dashboard() {
   const [orders, setOrders] = useState<OrderItem[]>([])
   const [loadingOrders, setLoadingOrders] = useState(false)
   const [ordersError, setOrdersError] = useState<string | null>(null)
+  // 工单列表
+  type TicketItem = {
+    id: string
+    subject?: string
+    priority?: string
+    category?: string
+    status?: string
+    created_at?: string
+  }
+  const [tickets, setTickets] = useState<TicketItem[]>([])
+  const [loadingTickets, setLoadingTickets] = useState(false)
+  const [ticketsError, setTicketsError] = useState<string | null>(null)
   // 日期格式化与排序工具
   const fmtDate = (v?: string) => {
     try {
@@ -69,11 +84,6 @@ export default function Dashboard() {
 
   // 已移除 mockOrders，订单仅展示后端真实数据
 
-  const mockTickets = [
-    { id: "TIC001", title: "连接问题", status: "已解决", date: "2024-01-14", priority: "高" },
-    { id: "TIC002", title: "账户充值", status: "处理中", date: "2024-01-12", priority: "中" },
-    { id: "TIC003", title: "功能咨询", status: "已关闭", date: "2024-01-08", priority: "低" },
-  ]
 
   // 拉取当前登录用户产品信息（基于 Cookie 的会话）
   const reloadProducts = useCallback(async () => {
@@ -169,6 +179,37 @@ export default function Dashboard() {
       setPurchasingFreePlan(false)
     }
   }, [reloadProducts, reloadOrders])
+
+  // 拉取工单列表
+  const reloadTickets = useCallback(async () => {
+    setLoadingTickets(true)
+    setTicketsError(null)
+    try {
+      const r = await fetch(`${API_BASE}/support/tickets`, { credentials: "include" })
+      if (!r.ok) throw new Error(`加载失败: ${r.status}`)
+      const data = await r.json()
+      const list: any[] = Array.isArray(data) ? data : []
+      const mapped: TicketItem[] = list.map((t: any) => ({
+        id: t.id || t.ticket_id || "",
+        subject: t.subject || t.title || "",
+        priority: t.priority || "",
+        category: t.category || "",
+        status: t.status || "",
+        created_at: t.created_at || t.date || ""
+      }))
+      setTickets(mapped)
+    } catch (e: any) {
+      setTicketsError(e?.message || "加载失败")
+    } finally {
+      setLoadingTickets(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (activeSection === "tickets") {
+      reloadTickets()
+    }
+  }, [activeSection, reloadTickets])
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -385,6 +426,11 @@ export default function Dashboard() {
 
         {/* Dashboard Content */}
         <main className="p-6 space-y-6">
+          {/* Developer Mode Panel */}
+          {(DEV_MODE_ENABLED || IS_DEVELOPMENT) && (
+            <DeveloperModePanel />
+          )}
+
           {activeSection === "dashboard" && (
             <>
               {/* Welcome Banner */}
@@ -397,8 +443,11 @@ export default function Dashboard() {
                       若有疑问可提交工单或联系右下角客服～
                     </h1>
                     <div className="flex space-x-4">
-                      <button className="bg-white bg-opacity-20 text-white px-6 py-2 rounded-lg hover:bg-opacity-30 transition-colors">
-                        优惠购买
+                      <button
+                        onClick={() => setActiveSection("pricing")}
+                        className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                      >
+                        一键订阅
                       </button>
                       <button className="bg-white bg-opacity-20 text-white px-6 py-2 rounded-lg hover:bg-opacity-30 transition-colors">
                         Telegram群组
@@ -519,15 +568,7 @@ export default function Dashboard() {
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200">
-                      <div className="flex items-center space-x-3">
-                        <span className="text-gray-900">iOS</span>
-                        <span className="text-gray-500">苹果手机和平板客户端</span>
-                      </div>
-                      <div className="w-8 h-8 bg-gray-100 rounded border-2 border-dashed border-gray-300 flex items-center justify-center">
-                        <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-                      </div>
-                    </div>
+                    
 
                     <div className="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200">
                       <div className="flex items-center space-x-3">
@@ -537,11 +578,21 @@ export default function Dashboard() {
                         <span className="text-gray-900">Windows电脑客户端</span>
                       </div>
                       <button className="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700 transition-colors">
-                        下载
+                        <a href="https://wwbi.lanzoue.com/iPwsU36smqbc">下载</a>
                       </button>
                     </div>
 
-                    <div className="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200">
+                      {/* 待开发 苹果支持 */}
+                    {/* <div className="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200">
+                      <div className="flex items-center space-x-3">
+                        <span className="text-gray-900">iOS</span>
+                        <span className="text-gray-500">苹果手机和平板客户端</span>
+                      </div>
+                      <div className="w-8 h-8 bg-gray-100 rounded border-2 border-dashed border-gray-300 flex items-center justify-center">
+                        <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+                      </div>
+                    </div> */}
+                    {/* <div className="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200">
                       <div className="flex items-center space-x-3">
                         <svg className="w-5 h-5 text-gray-800" viewBox="0 0 24 24" fill="currentColor">
                           <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.81.87.78 0 2.26-1.07 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
@@ -551,7 +602,7 @@ export default function Dashboard() {
                       <button className="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700 transition-colors">
                         下载
                       </button>
-                    </div>
+                    </div> */}
                   </div>
                 </div>
               </div>
@@ -706,102 +757,164 @@ export default function Dashboard() {
 
           {activeSection === "tickets" && (
             <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <h1 className="text-3xl font-bold text-gray-900">工单列表</h1>
-                <Button className="bg-blue-600 hover:bg-blue-700">提交工单</Button>
-              </div>
-
-              <Card>
-                <CardContent className="p-0">
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead className="bg-gray-50 border-b">
-                        <tr>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            工单号
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            标题
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            优先级
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            状态
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            创建日期
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            操作
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {mockTickets.map((ticket) => (
-                          <tr key={ticket.id} className="hover:bg-gray-50">
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                              {ticket.id}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{ticket.title}</td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <span
-                                className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                                  ticket.priority === "高"
-                                    ? "bg-red-100 text-red-800"
-                                    : ticket.priority === "中"
-                                      ? "bg-yellow-100 text-yellow-800"
-                                      : "bg-green-100 text-green-800"
-                                }`}
-                              >
-                                {ticket.priority}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <span
-                                className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                                  ticket.status === "已解决"
-                                    ? "bg-green-100 text-green-800"
-                                    : ticket.status === "处理中"
-                                      ? "bg-blue-100 text-blue-800"
-                                      : "bg-gray-100 text-gray-800"
-                                }`}
-                              >
-                                {ticket.status}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{ticket.date}</td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              <Button variant="outline" size="sm">
-                                查看详情
-                              </Button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+              {!showTicketForm ? (
+                <>
+                  <div className="flex items-center justify-between">
+                    <h1 className="text-3xl font-bold text-gray-900">工单列表</h1>
+                    <div className="flex gap-2">
+                      <Button onClick={reloadTickets} disabled={loadingTickets} variant="outline">
+                        {loadingTickets ? "刷新中..." : "刷新"}
+                      </Button>
+                      <Button onClick={() => setShowTicketForm(true)} className="bg-blue-600 hover:bg-blue-700">
+                        提交工单
+                      </Button>
+                    </div>
                   </div>
-                </CardContent>
-              </Card>
+
+                  <Card>
+                    <CardContent className="p-0">
+                      <div className="overflow-x-auto">
+                        <table className="w-full">
+                          <thead className="bg-gray-50 border-b">
+                            <tr>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                工单号
+                              </th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                标题
+                              </th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                分类
+                              </th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                优先级
+                              </th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                状态
+                              </th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                创建日期
+                              </th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                操作
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody className="bg-white divide-y divide-gray-200">
+                            {loadingTickets && (
+                              <tr>
+                                <td colSpan={7} className="px-6 py-8 text-center text-sm text-gray-500">正在加载工单...</td>
+                              </tr>
+                            )}
+                            {!loadingTickets && ticketsError && (
+                              <tr>
+                                <td colSpan={7} className="px-6 py-8 text-center text-sm text-red-500">{ticketsError}</td>
+                              </tr>
+                            )}
+                            {!loadingTickets && !ticketsError && tickets.length === 0 && (
+                              <tr>
+                                <td colSpan={7} className="px-6 py-8 text-center text-sm text-gray-500">暂无工单</td>
+                              </tr>
+                            )}
+                            {!loadingTickets && !ticketsError && tickets.length > 0 && (
+                              tickets.map((ticket) => (
+                                <tr key={ticket.id} className="hover:bg-gray-50">
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                    {ticket.id}
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{ticket.subject || "-"}</td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{ticket.category || "-"}</td>
+                                  <td className="px-6 py-4 whitespace-nowrap">
+                                    <span
+                                      className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                        ticket.priority === "高"
+                                          ? "bg-red-100 text-red-800"
+                                          : ticket.priority === "中"
+                                            ? "bg-yellow-100 text-yellow-800"
+                                            : "bg-green-100 text-green-800"
+                                      }`}
+                                    >
+                                      {ticket.priority || "中"}
+                                    </span>
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap">
+                                    <span
+                                      className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                        ticket.status === "已解决"
+                                          ? "bg-green-100 text-green-800"
+                                          : ticket.status === "处理中"
+                                            ? "bg-blue-100 text-blue-800"
+                                            : "bg-gray-100 text-gray-800"
+                                      }`}
+                                    >
+                                      {ticket.status || "待处理"}
+                                    </span>
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {ticket.created_at ? new Date(ticket.created_at).toLocaleString() : "-"}
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <Button variant="outline" size="sm">
+                                      查看详情
+                                    </Button>
+                                  </td>
+                                </tr>
+                              ))
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </>
+              ) : (
+                <TicketForm
+                  onSuccess={() => {
+                    setShowTicketForm(false)
+                    reloadTickets()
+                  }}
+                  onCancel={() => setShowTicketForm(false)}
+                />
+              )}
             </div>
           )}
         </main>
 
-        {/* Floating Purchase Button */}
-        <div className="fixed bottom-6 right-6">
+        {/* Floating Action Buttons */}
+        <div className="fixed bottom-6 right-6 flex flex-col gap-3">
           <button
             onClick={() => setActiveSection("pricing")}
-            className="bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+            className="bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 transition-colors flex items-center space-x-2 group"
+            title="一键订阅"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 strokeWidth={2}
-                d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+                d="M13 10V3L4 14h7v7l9-11h-7z"
               />
             </svg>
-            <span className="hidden sm:block">购买套餐</span>
+            <span className="hidden sm:group-hover:block transition-all duration-200">一键订阅</span>
+          </button>
+
+          <button
+            onClick={() => {
+              setActiveSection("tickets")
+              setShowTicketForm(true)
+            }}
+            className="bg-green-600 text-white p-4 rounded-full shadow-lg hover:bg-green-700 transition-colors flex items-center space-x-2 group"
+            title="提交工单"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+              />
+            </svg>
+            <span className="hidden sm:group-hover:block transition-all duration-200">提交工单</span>
           </button>
         </div>
       </div>

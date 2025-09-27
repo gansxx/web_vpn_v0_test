@@ -3,6 +3,11 @@ import type { NextRequest } from "next/server";
 
 console.log("加载middleware模块");
 
+// Check if auth middleware is disabled in developer mode
+function isAuthMiddlewareDisabled(): boolean {
+  return process.env.NEXT_PUBLIC_DISABLE_AUTH_MIDDLEWARE === "true";
+}
+
 // 白名单：对 "/" 用精确匹配，其它按精确或前缀匹配
 const PUBLIC_PATHS = ["/", "/signin", "/favicon.ico"];
 const PUBLIC_PREFIXES = ["/_next", "/api"];
@@ -27,6 +32,14 @@ export async function middleware(req: NextRequest) {
 
   // 仅保护 /dashboard 及其子路径
   if (pathname.startsWith("/dashboard")) {
+    // Check if auth middleware is disabled in developer mode
+    if (isAuthMiddlewareDisabled()) {
+      console.log("[MW] auth middleware disabled in developer mode");
+      const res = NextResponse.next();
+      res.headers.set("x-mw-debug", `bypass:dev-mode:${pathname}`);
+      return res;
+    }
+
     // console.log("req:",req)
     const cookie = req.cookies.get("access_token");
     const token = cookie?.value ?? null;

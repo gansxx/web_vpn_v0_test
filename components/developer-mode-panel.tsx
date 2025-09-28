@@ -5,10 +5,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { DEV_MODE_ENABLED, IS_DEVELOPMENT, getDevModeSetting, setDevModeSetting, resetDevModeSettings } from "@/lib/config"
 
+const DEV_PANEL_STORAGE_KEY = "dev_panel_visible"
+
 export default function DeveloperModePanel() {
   const [disableTurnstile, setDisableTurnstile] = useState(false)
   const [disableAuthMiddleware, setDisableAuthMiddleware] = useState(false)
   const [isVisible, setIsVisible] = useState(false)
+  const [isPanelVisible, setIsPanelVisible] = useState(true)
 
   useEffect(() => {
     // Only show panel if dev mode is enabled or in development
@@ -17,6 +20,14 @@ export default function DeveloperModePanel() {
     // Load current settings
     setDisableTurnstile(getDevModeSetting("DISABLE_TURNSTILE"))
     setDisableAuthMiddleware(getDevModeSetting("DISABLE_AUTH_MIDDLEWARE"))
+
+    // Load panel visibility preference from localStorage
+    if (typeof window !== "undefined") {
+      const savedVisibility = localStorage.getItem(DEV_PANEL_STORAGE_KEY)
+      if (savedVisibility !== null) {
+        setIsPanelVisible(savedVisibility === "true")
+      }
+    }
   }, [])
 
   const handleTurnstileToggle = () => {
@@ -50,19 +61,62 @@ export default function DeveloperModePanel() {
     }
   }
 
+  const togglePanelVisibility = () => {
+    const newVisibility = !isPanelVisible
+    setIsPanelVisible(newVisibility)
+
+    // Save preference to localStorage
+    if (typeof window !== "undefined") {
+      localStorage.setItem(DEV_PANEL_STORAGE_KEY, newVisibility.toString())
+    }
+  }
+
   if (!isVisible) {
     return null
+  }
+
+  // If panel is hidden, show only a small toggle button
+  if (!isPanelVisible) {
+    return (
+      <div className="fixed top-4 right-4 z-50">
+        <Button
+          onClick={togglePanelVisibility}
+          size="sm"
+          variant="outline"
+          className="bg-orange-100 border-orange-300 text-orange-800 hover:bg-orange-200 shadow-lg"
+          title="显示开发者面板"
+        >
+          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
+          </svg>
+          <span className="ml-1 text-xs">DEV</span>
+        </Button>
+      </div>
+    )
   }
 
   return (
     <Card className="border-orange-200 bg-orange-50">
       <CardHeader className="pb-3">
-        <CardTitle className="flex items-center space-x-2 text-orange-800">
-          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
-          </svg>
-          <span>开发者模式控制面板</span>
-          <span className="text-xs bg-orange-200 px-2 py-1 rounded-full">DEV</span>
+        <CardTitle className="flex items-center justify-between text-orange-800">
+          <div className="flex items-center space-x-2">
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
+            </svg>
+            <span>开发者模式控制面板</span>
+            <span className="text-xs bg-orange-200 px-2 py-1 rounded-full">DEV</span>
+          </div>
+          <Button
+            onClick={togglePanelVisibility}
+            size="sm"
+            variant="ghost"
+            className="text-orange-600 hover:text-orange-800 hover:bg-orange-100 p-1"
+            title="隐藏面板"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </Button>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">

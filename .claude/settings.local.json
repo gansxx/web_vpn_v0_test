@@ -1,0 +1,30 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run build:*)",
+      "Bash(npm run lint)",
+      "WebSearch",
+      "Bash(curl:*)",
+      "Bash(ls:*)",
+      "Bash(powershell.exe:*)",
+      "Bash(echo $env:USERPROFILE)",
+      "Read(//c/Users/**)",
+      "Bash(npx tsc:*)",
+      "mcp__playwright__browser_navigate",
+      "Bash(lsof:*)",
+      "Bash(npm run dev:*)",
+      "mcp__playwright__browser_install",
+      "Bash(NEXT_PUBLIC_DISABLE_AUTH_MIDDLEWARE=true npm run dev)",
+      "Bash(NEXT_PUBLIC_DISABLE_AUTH_MIDDLEWARE=true npm run build)",
+      "Bash(tree:*)",
+      "Bash(xargs -r kill -9)",
+      "mcp__serena__list_dir",
+      "Bash(ffmpeg:*)",
+      "Bash(timeout 60 npm run build)",
+      "mcp__serena__find_file",
+      "mcp__serena__get_symbols_overview"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

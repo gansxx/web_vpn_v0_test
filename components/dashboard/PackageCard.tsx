@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button"
 import { ProductItem, fmtDate } from "@/lib/dashboard-utils"
+import { SingleSubscriptionButton } from "./SingleSubscriptionButton"
 
 interface PackageCardProps {
   products: ProductItem[]
@@ -60,6 +61,7 @@ export function PackageCard({ products, loading, error, onReload }: PackageCardP
                     <th className="px-4 py-3 text-left text-sm font-medium">套餐名</th>
                     <th className="px-4 py-3 text-left text-sm font-medium">购买时间</th>
                     <th className="px-4 py-3 text-left text-sm font-medium">到期时间</th>
+                    <th className="px-4 py-3 text-center text-sm font-medium">一键订阅</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -71,6 +73,15 @@ export function PackageCard({ products, loading, error, onReload }: PackageCardP
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-300">
                         {p.end_time ? new Date(p.end_time).toLocaleString() : "-"}
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <SingleSubscriptionButton
+                          subscriptionUrl={p.subscription_url}
+                          productName={p.product_name}
+                          size="sm"
+                          variant="outline"
+                          className="text-white border-white/20 hover:bg-white/10"
+                        />
                       </td>
                     </tr>
                   ))}

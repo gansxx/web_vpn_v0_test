@@ -1,16 +1,9 @@
 "use client"
 
-import { useMemo, useEffect } from "react"
+import { useMemo } from "react"
 import { processMarkdownContent } from "@/lib/markdown-utils"
 import { SubscriptionLinkButton } from "./SubscriptionLinkButton"
 
-// Type declarations for debug functions
-declare global {
-  interface Window {
-    debugImageLoad?: (imageId: string, src: string, alt: string, imgElement: HTMLImageElement) => void
-    debugImageError?: (imageId: string, src: string, alt: string, imgElement: HTMLImageElement) => void
-  }
-}
 
 interface MarkdownRendererProps {
   content: string
@@ -22,39 +15,6 @@ export function MarkdownRenderer({ content, className = "" }: MarkdownRendererPr
     return processMarkdownContent(content)
   }, [content])
 
-  // Set up debug functions for development mode
-  useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
-      // Image load success handler
-      window.debugImageLoad = (imageId: string, src: string, alt: string, imgElement: HTMLImageElement) => {
-        console.log(`[DocumentViewer] 图片加载成功: ${src}`, {
-          id: imageId,
-          alt: alt,
-          naturalWidth: imgElement.naturalWidth,
-          naturalHeight: imgElement.naturalHeight,
-          timestamp: new Date().toLocaleTimeString()
-        })
-      }
-
-      // Image load error handler
-      window.debugImageError = (imageId: string, src: string, alt: string, imgElement: HTMLImageElement) => {
-        console.error(`[DocumentViewer] 图片加载失败: ${src}`, {
-          id: imageId,
-          alt: alt,
-          error: '图片资源不存在或无法访问',
-          timestamp: new Date().toLocaleTimeString()
-        })
-      }
-    }
-
-    // Cleanup on unmount
-    return () => {
-      if (process.env.NODE_ENV === 'development') {
-        delete window.debugImageLoad
-        delete window.debugImageError
-      }
-    }
-  }, [])
 
   // Simple markdown to HTML converter
   const renderMarkdown = (text: string) => {
@@ -64,6 +24,12 @@ export function MarkdownRenderer({ content, className = "" }: MarkdownRendererPr
     html = html.replace(/^### (.*$)/gm, '<h3 class="text-xl font-semibold text-gray-900 mt-6 mb-4">$1</h3>')
     html = html.replace(/^## (.*$)/gm, '<h2 class="text-2xl font-bold text-gray-900 mt-8 mb-6">$1</h2>')
     html = html.replace(/^# (.*$)/gm, '<h1 class="text-3xl font-bold text-gray-900 mt-8 mb-6">$1</h1>')
+
+    // Special handling for subscription button placeholder (MUST come before bold text processing!)
+    html = html.replace(
+      /\*\*\[🔑 获取我的订阅链接（自动复制）\]\*\*/g,
+      '<div class="my-6 text-center subscription-button-placeholder">[订阅按钮将在此处显示]</div>'
+    )
 
     // Bold text
     html = html.replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold">$1</strong>')
@@ -79,18 +45,7 @@ export function MarkdownRenderer({ content, className = "" }: MarkdownRendererPr
         imageSrc = `/${src}`
       }
 
-      // Generate unique ID for debugging
-      const imageId = `img-${Math.random().toString(36).substr(2, 9)}`
-
-      return `<img
-        id="${imageId}"
-        src="${imageSrc}"
-        alt="${alt}"
-        class="max-w-full h-auto rounded-lg shadow-md my-4"
-        loading="lazy"
-        onload="window.debugImageLoad?.('${imageId}', '${imageSrc}', '${alt}', this)"
-        onerror="window.debugImageError?.('${imageId}', '${imageSrc}', '${alt}', this)"
-      />`
+      return `<img src="${imageSrc}" alt="${alt}" class="max-w-full h-auto rounded-lg shadow-md my-4" loading="lazy" />`
     })
 
     // Links
@@ -115,12 +70,6 @@ export function MarkdownRenderer({ content, className = "" }: MarkdownRendererPr
 
     // Wrap in paragraphs
     html = '<p class="mb-4">' + html + '</p>'
-
-    // Special handling for subscription button placeholder
-    html = html.replace(
-      /\*\*\[🔑 获取我的订阅链接（自动复制）\]\*\*/g,
-      '<div class="my-6 text-center subscription-button-placeholder">[订阅按钮将在此处显示]</div>'
-    )
 
     return html
   }

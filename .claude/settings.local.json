@@ -22,7 +22,11 @@
       "Bash(ffmpeg:*)",
       "Bash(timeout 60 npm run build)",
       "mcp__serena__find_file",
-      "mcp__serena__get_symbols_overview"
+      "mcp__serena__get_symbols_overview",
+      "mcp__serena__activate_project",
+      "mcp__serena__get_current_config",
+      "mcp__serena__list_memories",
+      "mcp__serena__check_onboarding_performed"
     ],
     "deny": [],
     "ask": []

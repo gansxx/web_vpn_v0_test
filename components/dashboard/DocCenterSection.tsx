@@ -1,7 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { DocumentList, DocumentMeta } from "./DocumentList"
+import { DocumentList } from "./DocumentList"
+import { DocumentMeta, documents } from "@/lib/documents"
 import { DocumentViewer } from "./DocumentViewer"
 
 export function DocCenterSection() {
@@ -9,45 +10,6 @@ export function DocCenterSection() {
   const [isViewerOpen, setIsViewerOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
 
-  // Document metadata
-  const documents: DocumentMeta[] = [
-    {
-      id: "subscription",
-      title: "VPN客户端使用教程",
-      description: "详细的客户端下载、安装和配置指南，包含订阅链接获取和导入步骤",
-      category: "客户端配置",
-      filename: "subscription.md",
-      icon: "🔧",
-      lastUpdated: "2024-01-15"
-    },
-    {
-      id: "troubleshooting",
-      title: "常见问题排除",
-      description: "解决连接失败、速度慢、无法访问等常见技术问题的方法",
-      category: "故障排除",
-      filename: "troubleshooting.md",
-      icon: "🔧",
-      lastUpdated: "2024-01-10"
-    },
-    {
-      id: "platform-guides",
-      title: "多平台客户端指南",
-      description: "Windows、Mac、iOS、Android等不同平台的专属配置教程",
-      category: "多平台指南",
-      filename: "platform-guides.md",
-      icon: "📱",
-      lastUpdated: "2024-01-08"
-    },
-    {
-      id: "faq",
-      title: "常见问题解答",
-      description: "用户最关心的问题和详细解答，涵盖订购、使用、技术支持等方面",
-      category: "常见问题",
-      filename: "faq.md",
-      icon: "❓",
-      lastUpdated: "2024-01-12"
-    }
-  ]
 
   // Check if mobile on mount
   useEffect(() => {

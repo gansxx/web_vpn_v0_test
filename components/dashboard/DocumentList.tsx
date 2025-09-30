@@ -1,16 +1,7 @@
 "use client"
 
 import { useState } from "react"
-
-export interface DocumentMeta {
-  id: string
-  title: string
-  description: string
-  category: string
-  filename: string
-  icon: string
-  lastUpdated: string
-}
+import { DocumentMeta } from "@/lib/documents"
 
 interface DocumentListProps {
   documents: DocumentMeta[]
@@ -20,6 +11,7 @@ interface DocumentListProps {
 
 export function DocumentList({ documents, onDocumentSelect, selectedDocument }: DocumentListProps) {
   const [searchTerm, setSearchTerm] = useState("")
+  const [expandedDocs, setExpandedDocs] = useState<Set<string>>(new Set())
 
   // Group documents by category
   const groupedDocs = documents.reduce((acc, doc) => {
@@ -30,12 +22,32 @@ export function DocumentList({ documents, onDocumentSelect, selectedDocument }: 
     return acc
   }, {} as Record<string, DocumentMeta[]>)
 
-  // Filter documents based on search term
+  // Toggle expansion state
+  const toggleExpansion = (docId: string) => {
+    const newExpanded = new Set(expandedDocs)
+    if (newExpanded.has(docId)) {
+      newExpanded.delete(docId)
+    } else {
+      newExpanded.add(docId)
+    }
+    setExpandedDocs(newExpanded)
+  }
+
+  // Filter documents based on search term (including subDocuments)
   const filteredGroupedDocs = Object.entries(groupedDocs).reduce((acc, [category, docs]) => {
-    const filteredDocs = docs.filter(doc =>
-      doc.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      doc.description.toLowerCase().includes(searchTerm.toLowerCase())
-    )
+    const filteredDocs = docs.filter(doc => {
+      // Check main document
+      const mainMatch = doc.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                       doc.description.toLowerCase().includes(searchTerm.toLowerCase())
+
+      // Check sub documents
+      const subMatch = doc.subDocuments?.some(subDoc =>
+        subDoc.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        subDoc.description.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+
+      return mainMatch || subMatch
+    })
     if (filteredDocs.length > 0) {
       acc[category] = filteredDocs
     }
@@ -99,36 +111,119 @@ export function DocumentList({ documents, onDocumentSelect, selectedDocument }: 
             </span>
           </div>
 
-          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-1">
+          <div className="space-y-3">
             {docs.map((doc) => (
-              <div
-                key={doc.id}
-                onClick={() => onDocumentSelect(doc)}
-                className={`p-4 rounded-lg border cursor-pointer transition-all duration-200 hover:shadow-md ${
-                  selectedDocument?.id === doc.id
-                    ? "border-blue-500 bg-blue-50 shadow-md"
-                    : "border-gray-200 bg-white hover:border-gray-300"
-                }`}
-              >
-                <div className="flex items-start space-x-3">
-                  <div className="text-2xl">{doc.icon}</div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-lg font-medium text-gray-900 truncate">
-                      {doc.title}
-                    </h3>
-                    <p className="text-sm text-gray-500 mt-1 line-clamp-2">
-                      {doc.description}
-                    </p>
-                    <div className="flex items-center justify-between mt-3 text-xs text-gray-400">
-                      <span>最后更新: {doc.lastUpdated}</span>
-                      <div className="flex items-center space-x-1">
-                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-                        </svg>
+              <div key={doc.id} className="space-y-2">
+                {/* Main Document */}
+                <div
+                  onClick={() => {
+                    // If document has subDocuments, toggle expansion
+                    if (doc.subDocuments && doc.subDocuments.length > 0) {
+                      toggleExpansion(doc.id)
+                    } else if (doc.filename) {
+                      // If no subDocuments but has filename, open directly
+                      onDocumentSelect(doc)
+                    }
+                  }}
+                  className={`p-4 rounded-lg border cursor-pointer transition-all duration-200 hover:shadow-md ${
+                    selectedDocument?.id === doc.id
+                      ? "border-blue-500 bg-blue-50 shadow-md"
+                      : "border-gray-200 bg-white hover:border-gray-300"
+                  } ${doc.subDocuments && doc.subDocuments.length > 0 ? 'hover:bg-gray-50' : ''}`}
+                >
+                  <div className="flex items-start space-x-3">
+                    <div className="text-2xl">{doc.icon}</div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-lg font-medium text-gray-900 truncate flex items-center">
+                          {doc.title}
+                          {doc.subDocuments && doc.subDocuments.length > 0 && (
+                            <span className="ml-2 text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded-full">
+                              点击展开
+                            </span>
+                          )}
+                        </h3>
+                        <div className="flex items-center space-x-2">
+                          {doc.subDocuments && doc.subDocuments.length > 0 && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                toggleExpansion(doc.id)
+                              }}
+                              className="p-1 hover:bg-gray-100 rounded transition-colors"
+                              title={expandedDocs.has(doc.id) ? "折叠子文档" : "展开子文档"}
+                            >
+                              <svg
+                                className={`w-4 h-4 transition-transform ${expandedDocs.has(doc.id) ? 'rotate-90' : ''}`}
+                                fill="currentColor"
+                                viewBox="0 0 20 20"
+                              >
+                                <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                              </svg>
+                            </button>
+                          )}
+                          {doc.filename && (
+                            <button
+                              onClick={() => onDocumentSelect(doc)}
+                              className="p-1 hover:bg-gray-100 rounded transition-colors"
+                              title="查看文档"
+                            >
+                              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                              </svg>
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                      <p className="text-sm text-gray-500 mt-1 line-clamp-2">
+                        {doc.description}
+                      </p>
+                      <div className="flex items-center justify-between mt-3 text-xs text-gray-400">
+                        <span>最后更新: {doc.lastUpdated}</span>
+                        {doc.subDocuments && doc.subDocuments.length > 0 && (
+                          <span className="bg-gray-100 px-2 py-1 rounded-full">
+                            {doc.subDocuments.length} 个子文档
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
                 </div>
+
+                {/* Sub Documents */}
+                {doc.subDocuments && expandedDocs.has(doc.id) && (
+                  <div className="ml-6 space-y-2">
+                    {doc.subDocuments.map((subDoc) => (
+                      <div
+                        key={subDoc.id}
+                        onClick={() => onDocumentSelect(subDoc)}
+                        className={`p-3 rounded-lg border cursor-pointer transition-all duration-200 hover:shadow-sm ${
+                          selectedDocument?.id === subDoc.id
+                            ? "border-blue-400 bg-blue-50 shadow-sm"
+                            : "border-gray-200 bg-gray-50 hover:border-gray-300"
+                        }`}
+                      >
+                        <div className="flex items-start space-x-3">
+                          <div className="text-lg">{subDoc.icon}</div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="text-base font-medium text-gray-800 truncate">
+                              {subDoc.title}
+                            </h4>
+                            <p className="text-xs text-gray-500 mt-1 line-clamp-1">
+                              {subDoc.description}
+                            </p>
+                            <div className="flex items-center justify-between mt-2 text-xs text-gray-400">
+                              <span>更新: {subDoc.lastUpdated}</span>
+                              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                              </svg>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
           </div>

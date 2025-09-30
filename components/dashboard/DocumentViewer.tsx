@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { MarkdownRenderer } from "./MarkdownRenderer"
-import { DocumentMeta } from "./DocumentList"
+import { DocumentMeta } from "@/lib/documents"
 
 interface DocumentViewerProps {
   document: DocumentMeta
@@ -23,6 +23,14 @@ export function DocumentViewer({ document, isOpen, onClose, isMobile = false }: 
       try {
         setLoading(true)
         setError(null)
+
+        // If document has no filename, show description or placeholder
+        if (!document.filename) {
+          setContent(`# ${document.title}\n\n${document.description}\n\n该文档包含以下子文档，请从左侧文档列表中选择具体的子文档查看详细内容。`)
+          setLoading(false)
+          return
+        }
+
         const response = await fetch(`/doc/${document.filename}`)
 
         if (!response.ok) {
@@ -101,10 +109,11 @@ export function DocumentViewer({ document, isOpen, onClose, isMobile = false }: 
         )}
 
         {!loading && !error && content && (
-          <div className="p-8">
+          <div className="p-6">
             <MarkdownRenderer
               content={content}
-              className="text-gray-700 leading-relaxed"
+              className="text-gray-700 leading-snug"
+              compact={true}
             />
           </div>
         )}

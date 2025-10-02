@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { useTickets } from "@/hooks/useTickets"
+import { clearAllTicketCache } from "@/hooks/useTicketDetail"
 import { TicketsTable } from "./TicketsTable"
 import TicketForm from "@/components/ticket-form"
 
@@ -11,18 +12,24 @@ interface TicketsSectionProps {
 export function TicketsSection({ showTicketForm, onShowTicketForm }: TicketsSectionProps) {
   const { tickets, loading, error, reloadTickets } = useTickets()
 
+  const handleReloadTickets = () => {
+    // Clear all ticket detail cache before reloading to ensure fresh data
+    clearAllTicketCache()
+    reloadTickets()
+  }
+
   useEffect(() => {
     if (!showTicketForm) {
-      reloadTickets()
+      handleReloadTickets()
     }
-  }, [showTicketForm, reloadTickets])
+  }, [showTicketForm])
 
   if (showTicketForm) {
     return (
       <TicketForm
         onSuccess={() => {
           onShowTicketForm(false)
-          reloadTickets()
+          handleReloadTickets()
         }}
         onCancel={() => onShowTicketForm(false)}
       />
@@ -34,7 +41,7 @@ export function TicketsSection({ showTicketForm, onShowTicketForm }: TicketsSect
       tickets={tickets}
       loading={loading}
       error={error}
-      onReload={reloadTickets}
+      onReload={handleReloadTickets}
       onNewTicket={() => onShowTicketForm(true)}
     />
   )

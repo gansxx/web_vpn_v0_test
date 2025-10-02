@@ -1,5 +1,5 @@
 import { useProducts } from "@/hooks/useProducts"
-import { useSubscriptionLink } from "@/hooks/useSubscriptionLink"
+import { copyToClipboard, showToast } from "@/lib/markdown-utils"
 
 interface WelcomeBannerProps {
   onOrderClick: () => void
@@ -7,21 +7,52 @@ interface WelcomeBannerProps {
 
 export function WelcomeBanner({ onOrderClick }: WelcomeBannerProps) {
   const { products, loading: productsLoading } = useProducts()
-  const { getSubscriptionLink, loading: subscriptionLoading, hasCachedUrl } = useSubscriptionLink()
 
-  // Check if user has any active subscriptions
-  const hasActiveSubscription = products.length > 0 || hasCachedUrl
-  const isLoading = productsLoading || subscriptionLoading
+  // Check if user has any products
+  const hasActiveSubscription = products.length > 0
+  const isLoading = productsLoading
 
+  // Smart subscription handler - same logic as FloatingButtons
   const handleSmartSubscription = async () => {
     if (isLoading) return
 
-    // If user has subscriptions, get/copy the subscription link
-    if (hasActiveSubscription) {
-      await getSubscriptionLink()
-    } else {
-      // If no subscriptions, redirect to purchase page
+    // Check if user has any products
+    if (!products || products.length === 0) {
+      // No products, redirect to purchase
+      showToast('您还没有购买任何套餐，正在跳转到购买页面...', 'success')
       onOrderClick()
+      return
+    }
+
+    // Find products with subscription URLs
+    const productsWithUrls = products.filter(p => p.subscription_url && p.subscription_url.trim() !== "")
+
+    if (productsWithUrls.length === 0) {
+      // Has products but no subscription URLs
+      showToast('套餐信息正在同步中，请稍后刷新重试或联系客服', 'error')
+      return
+    }
+
+    // Find the latest product with subscription URL (sorted by buy_time)
+    const sortedProducts = [...productsWithUrls].sort((a, b) => {
+      const timeA = a.buy_time ? new Date(a.buy_time).getTime() : 0
+      const timeB = b.buy_time ? new Date(b.buy_time).getTime() : 0
+      return timeB - timeA
+    })
+
+    const latestProduct = sortedProducts[0]
+
+    try {
+      const success = await copyToClipboard(latestProduct.subscription_url!)
+      if (success) {
+        showToast(`${latestProduct.product_name || '最新套餐'} 订阅链接已复制到剪贴板`, 'success')
+      } else {
+        showToast('复制失败，请手动复制链接', 'error')
+        alert(`订阅链接: ${latestProduct.subscription_url}`)
+      }
+    } catch (error) {
+      console.error('复制失败:', error)
+      showToast('复制失败，请重试', 'error')
     }
   }
   return (
@@ -56,7 +87,7 @@ export function WelcomeBanner({ onOrderClick }: WelcomeBannerProps) {
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                   </svg>
-                  <span>获取订阅链接</span>
+                  <span>获取最新订阅链接</span>
                 </>
               ) : (
                 <>

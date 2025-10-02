@@ -25,6 +25,9 @@ export type TicketItem = {
   category?: string
   status?: string
   created_at?: string
+  description?: string
+  reply?: string
+  replied_at?: string
 }
 
 // Date formatting utility

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react"
 import { API_BASE } from "@/lib/config"
 import { ProductItem, sortProductsByDate } from "@/lib/dashboard-utils"
 import { useSessionSubscriptionUrl } from "./useSessionSubscriptionUrl"
+import { handleApiError } from "@/lib/api-utils"
 
 export function useProducts() {
   const [products, setProducts] = useState<ProductItem[]>([])
@@ -14,9 +15,12 @@ export function useProducts() {
     setError(null)
     try {
       const r = await fetch(`${API_BASE}/user/products`, { credentials: "include" })
+
       if (!r.ok) {
-        throw new Error(`加载失败: ${r.status}`)
+        const errorMessage = await handleApiError(r)
+        throw new Error(errorMessage)
       }
+
       const data = await r.json()
       const productsData = Array.isArray(data) ? data : []
       setProducts(productsData)

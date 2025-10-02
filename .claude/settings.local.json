@@ -26,7 +26,9 @@
       "mcp__serena__activate_project",
       "mcp__serena__get_current_config",
       "mcp__serena__list_memories",
-      "mcp__serena__check_onboarding_performed"
+      "mcp__serena__check_onboarding_performed",
+      "Bash(cat:*)",
+      "Read(//root/self_code/web_backend/routes/**)"
     ],
     "deny": [],
     "ask": []

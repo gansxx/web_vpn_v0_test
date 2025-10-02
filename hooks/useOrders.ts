@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react"
 import { API_BASE } from "@/lib/config"
 import { OrderItem, mapOrderData, sortOrdersByDate } from "@/lib/dashboard-utils"
+import { handleApiError } from "@/lib/api-utils"
 
 export function useOrders() {
   const [orders, setOrders] = useState<OrderItem[]>([])
@@ -12,7 +13,12 @@ export function useOrders() {
     setError(null)
     try {
       const r = await fetch(`${API_BASE}/user/orders`, { credentials: "include" })
-      if (!r.ok) throw new Error(`加载失败: ${r.status}`)
+
+      if (!r.ok) {
+        const errorMessage = await handleApiError(r)
+        throw new Error(errorMessage)
+      }
+
       const data = await r.json()
       const list: any[] = Array.isArray(data) ? data : []
       const mapped = mapOrderData(list)

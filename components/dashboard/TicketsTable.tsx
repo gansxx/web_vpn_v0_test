@@ -1,6 +1,8 @@
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { TicketItem, getTicketPriorityBadgeClass, getTicketStatusBadgeClass } from "@/lib/dashboard-utils"
+import { TicketDetailDialog } from "./TicketDetailDialog"
 
 interface TicketsTableProps {
   tickets: TicketItem[]
@@ -11,6 +13,19 @@ interface TicketsTableProps {
 }
 
 export function TicketsTable({ tickets, loading, error, onReload, onNewTicket }: TicketsTableProps) {
+  const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null)
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false)
+
+  const handleViewDetail = (ticket: TicketItem) => {
+    setSelectedTicketId(ticket.id)
+    setDetailDialogOpen(true)
+  }
+
+  const handleCloseDetail = () => {
+    setDetailDialogOpen(false)
+    setSelectedTicketId(null)
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -96,7 +111,7 @@ export function TicketsTable({ tickets, loading, error, onReload, onNewTicket }:
                         {ticket.created_at ? new Date(ticket.created_at).toLocaleString() : "-"}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        <Button variant="outline" size="sm">
+                        <Button variant="outline" size="sm" onClick={() => handleViewDetail(ticket)}>
                           查看详情
                         </Button>
                       </td>
@@ -108,6 +123,12 @@ export function TicketsTable({ tickets, loading, error, onReload, onNewTicket }:
           </div>
         </CardContent>
       </Card>
+
+      <TicketDetailDialog
+        ticketId={selectedTicketId}
+        open={detailDialogOpen}
+        onClose={handleCloseDetail}
+      />
     </div>
   )
 }

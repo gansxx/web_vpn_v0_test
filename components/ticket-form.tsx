@@ -30,7 +30,7 @@ export default function TicketForm({ onSuccess, onCancel }: TicketFormProps) {
     setError(null)
 
     try {
-      const response = await fetch(`${API_BASE}/support/tickets`, {
+      const response = await fetch(`${API_BASE}/support/submit_ticket`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"

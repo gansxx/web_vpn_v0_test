@@ -1,6 +1,7 @@
 import { useCallback, useState } from "react"
 import { API_BASE } from "@/lib/config"
 import { TicketItem, mapTicketData } from "@/lib/dashboard-utils"
+import { handleApiError } from "@/lib/api-utils"
 
 export function useTickets() {
   const [tickets, setTickets] = useState<TicketItem[]>([])
@@ -12,7 +13,12 @@ export function useTickets() {
     setError(null)
     try {
       const r = await fetch(`${API_BASE}/support/tickets`, { credentials: "include" })
-      if (!r.ok) throw new Error(`加载失败: ${r.status}`)
+
+      if (!r.ok) {
+        const errorMessage = await handleApiError(r)
+        throw new Error(errorMessage)
+      }
+
       const data = await r.json()
       const list: any[] = Array.isArray(data) ? data : []
       const mapped = mapTicketData(list)

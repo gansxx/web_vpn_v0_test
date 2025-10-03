@@ -1,8 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { DEV_MODE_ENABLED, IS_DEVELOPMENT } from "@/lib/config"
-import DeveloperModePanel from "@/components/developer-mode-panel"
 import { DashboardSidebar } from "./DashboardSidebar"
 import { DashboardHeader } from "./DashboardHeader"
 import { DashboardOverview } from "./DashboardOverview"
@@ -46,10 +44,6 @@ export default function DashboardLayout() {
         />
 
         <main className="p-6 space-y-6">
-          {(DEV_MODE_ENABLED || IS_DEVELOPMENT) && (
-            <DeveloperModePanel />
-          )}
-
           {activeSection === "dashboard" && (
             <DashboardOverview onOrderClick={() => setActiveSection("pricing")} />
           )}

@@ -37,7 +37,10 @@
       "Bash(./scripts/upload-image.sh:*)",
       "Bash(./scripts/remote-load.sh:*)",
       "Bash(docker system:*)",
-      "Read(//proc/**)"
+      "Read(//proc/**)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nfeat: Update deployment configuration for new server (8.217.223.134)\n\n### Updates\n- Update server IP to 8.217.223.134 in documentation\n- Add comprehensive GitHub Secrets configuration guide\n- Create server setup verification script\n- Add quick deployment guide\n\n### New Files\n- docs/GITHUB_SECRETS_SETUP.md - Detailed GitHub Secrets setup guide\n- docs/DEPLOYMENT_QUICK_START.md - Quick start deployment guide\n- scripts/verify-server-setup.sh - Automated server verification script\n- .env.production - Production environment template\n- .env.local.example - Local environment example\n\n### Modified Files\n- README.docker.md - Updated with new server IP and configuration links\n- .gitignore - Updated ignore patterns\n\n### Documentation Improvements\n- Added step-by-step SSH key generation guide\n- Included troubleshooting for common deployment issues\n- Added deployment checklist\n- Provided verification scripts for server readiness\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(ssh root@8.217.223.134 \"cat .env.docker\")",
+      "Bash(ssh:*)"
     ],
     "deny": [],
     "ask": []

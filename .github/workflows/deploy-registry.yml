@@ -67,7 +67,7 @@ jobs:
             NEXT_PUBLIC_API_BASE=${{ secrets.NEXT_PUBLIC_API_BASE }}
             NEXT_PUBLIC_TURNSTILE_SITE_KEY=${{ secrets.NEXT_PUBLIC_TURNSTILE_SITE_KEY }}
             NEXT_PUBLIC_DEV_MODE_ENABLED=false
-            NEXT_PUBLIC_DISABLE_TURNSTILE=false
+            NEXT_PUBLIC_DISABLE_TURNSTILE=True
             NEXT_PUBLIC_DISABLE_AUTH_MIDDLEWARE=false
           cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache
           cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache,mode=max

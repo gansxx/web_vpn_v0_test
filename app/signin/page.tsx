@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState, FormEvent, ChangeEvent } from "react"
-import { API_BASE } from "@/lib/config"
+import { API_BASE, DEV_MODE_ENABLED } from "@/lib/config"
 import Turnstile from "@/components/Turnstile"
 // cookie获取逻辑
 function getCookie(name: string): string | null {
@@ -434,34 +434,36 @@ export default function SignInPage() {
             </div>
           </form>
         </div>
-        <div className="mt-6 p-3 text-xs rounded bg-gray-50 border">
-          <div>Turnstile: {tsToken ? `${tsToken.slice(0, 8)}...` : "(未获取)"}</div>
-          <div>API_BASE: {dbg.apiBase}</div>
-          <div>tokenLen: {dbg.tokenLen} {dbg.tokenLen ? "✅" : "❌"}</div>
-          <div>url: {dbg.url || "(未发起)"}</div>
-          <div>status: {dbg.status}</div>
-          {dbg.err && <div className="text-red-600 break-all">err: {dbg.err}</div>}
-          <div className="mt-2 flex gap-2">
-            <button
-              type="button"
-              className="px-2 py-1 rounded border"
-              onClick={recheck}
-            >
-              重新检测
-            </button>
-            <button
-              type="button"
-              className="px-2 py-1 rounded border"
-              onClick={() => {
-                clearCookie("access_token")
-                setDbg((p) => ({ ...p, token: "", tokenLen: 0, url: "", status: "cleared", err: "" }))
-                console.log("[signin] access_token cleared")
-              }}
-            >
-              清除 access_token
-            </button>
+        {DEV_MODE_ENABLED && (
+          <div className="mt-6 p-3 text-xs rounded bg-gray-50 border">
+            <div>Turnstile: {tsToken ? `${tsToken.slice(0, 8)}...` : "(未获取)"}</div>
+            <div>API_BASE: {dbg.apiBase}</div>
+            <div>tokenLen: {dbg.tokenLen} {dbg.tokenLen ? "✅" : "❌"}</div>
+            <div>url: {dbg.url || "(未发起)"}</div>
+            <div>status: {dbg.status}</div>
+            {dbg.err && <div className="text-red-600 break-all">err: {dbg.err}</div>}
+            <div className="mt-2 flex gap-2">
+              <button
+                type="button"
+                className="px-2 py-1 rounded border"
+                onClick={recheck}
+              >
+                重新检测
+              </button>
+              <button
+                type="button"
+                className="px-2 py-1 rounded border"
+                onClick={() => {
+                  clearCookie("access_token")
+                  setDbg((p) => ({ ...p, token: "", tokenLen: 0, url: "", status: "cleared", err: "" }))
+                  console.log("[signin] access_token cleared")
+                }}
+              >
+                清除 access_token
+              </button>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   )

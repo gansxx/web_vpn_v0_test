@@ -30,7 +30,7 @@ jobs:
           load: true
           tags: vpn-web-nextjs:test
           build-args: |
-            NEXT_PUBLIC_API_BASE=https://selfgo.asia/api
+            NEXT_PUBLIC_API_BASE=https://api.selfgo.asia
             NEXT_PUBLIC_TURNSTILE_SITE_KEY=test_key
             NEXT_PUBLIC_DEV_MODE_ENABLED=false
             NEXT_PUBLIC_DISABLE_TURNSTILE=true

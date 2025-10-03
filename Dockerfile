@@ -4,15 +4,23 @@
 FROM node:20-alpine AS deps
 WORKDIR /app
 
-# Install dependencies based on the preferred package manager
-COPY package.json package-lock.json* ./
-RUN npm ci
+# Enable corepack and install pnpm
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
+# Copy package files (using pnpm)
+COPY package.json pnpm-lock.yaml ./
+
+# Install dependencies with pnpm
+RUN pnpm install --frozen-lockfile
 
 # ==================================
 # Stage 2: Builder
 # ==================================
 FROM node:20-alpine AS builder
 WORKDIR /app
+
+# Enable corepack and install pnpm (needed for build command)
+RUN corepack enable && corepack prepare pnpm@latest --activate
 
 # Copy dependencies from deps stage
 COPY --from=deps /app/node_modules ./node_modules
@@ -33,7 +41,7 @@ ENV NEXT_PUBLIC_DISABLE_TURNSTILE=${NEXT_PUBLIC_DISABLE_TURNSTILE}
 ENV NEXT_PUBLIC_DISABLE_AUTH_MIDDLEWARE=${NEXT_PUBLIC_DISABLE_AUTH_MIDDLEWARE}
 
 # Build the Next.js application
-RUN npm run build
+RUN pnpm run build
 
 # ==================================
 # Stage 3: Runner

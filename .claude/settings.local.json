@@ -31,7 +31,11 @@
       "Read(//root/self_code/web_backend/routes/**)",
       "Bash(git -C /root/self_code/web_vpn_v0_test status)",
       "Bash(git -C /root/self_code/web_vpn_v0_test branch --show-current)",
-      "Bash(chmod:*)"
+      "Bash(chmod:*)",
+      "mcp__sequential-thinking__sequentialthinking",
+      "Bash(./scripts/build-and-export.sh:*)",
+      "Bash(./scripts/upload-image.sh:*)",
+      "Bash(./scripts/remote-load.sh:*)"
     ],
     "deny": [],
     "ask": []

@@ -1,0 +1,83 @@
+# Production Docker Compose Configuration
+# This file overrides docker-compose.yml for production deployment
+# Usage: docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+
+version: '3.8'
+
+services:
+  # Next.js Application - Production Configuration
+  nextjs:
+    # Use pre-built image from registry instead of building
+    image: ${DOCKER_REGISTRY:-docker.io}/${DOCKER_USERNAME}/vpn-web-nextjs:${IMAGE_TAG:-latest}
+
+    # Remove build configuration (using registry image)
+    build: null
+
+    # Production environment variables
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_BASE=${NEXT_PUBLIC_API_BASE}
+      - NEXT_PUBLIC_TURNSTILE_SITE_KEY=${NEXT_PUBLIC_TURNSTILE_SITE_KEY}
+      - NEXT_PUBLIC_DEV_MODE_ENABLED=false
+      - NEXT_PUBLIC_DISABLE_TURNSTILE=false
+      - NEXT_PUBLIC_DISABLE_AUTH_MIDDLEWARE=false
+
+    # Resource limits for production
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+    # Always restart unless stopped manually
+    restart: unless-stopped
+
+    # Health check configuration
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+    # Logging configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Nginx - Production optimizations
+  nginx:
+    restart: unless-stopped
+
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+    # Logging configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+
+  # Certbot - Production configuration
+  certbot:
+    restart: unless-stopped
+
+    # Logging configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "2"

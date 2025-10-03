@@ -5,6 +5,7 @@
 - [架构概览](#架构概览)
 - [快速开始](#快速开始)
 - [部署步骤](#部署步骤)
+- [镜像传输方案](#镜像传输方案)
 - [配置说明](#配置说明)
 - [运维管理](#运维管理)
 - [故障排查](#故障排查)
@@ -202,6 +203,340 @@ docker-compose logs -f nginx
 
 # 测试 HTTPS
 curl -I https://your-domain.com
+```
+
+## 🚢 镜像传输方案
+
+### 方案对比
+
+| 方案 | 适用场景 | 优点 | 缺点 |
+|-----|---------|------|------|
+| docker save/load | 单服务器、网络受限 | 简单直接、离线可用 | 传输慢、不支持增量 |
+| 私有 Registry | 多服务器、团队协作 | 支持版本管理、增量传输 | 需要部署 Registry |
+| 公共 Registry | 开源项目、公开部署 | 最方便、全球 CDN | 可能有安全考虑 |
+
+### 方案 A: docker save/load (推荐)
+
+适合: **单服务器部署、网络受限环境、快速测试**
+
+#### 完整流程
+
+```bash
+# ========================================
+# 本地操作
+# ========================================
+
+# Step 1: 构建并导出镜像
+./scripts/build-and-export.sh
+
+# 输出文件: ./docker-images/vpn-web-nextjs-latest.tar.gz
+# 文件大小: 约 300-500MB (压缩后)
+
+# Step 2: 上传到云端服务器
+./scripts/upload-image.sh root@your-server-ip
+
+# 或指定端口
+./scripts/upload-image.sh root@your-server-ip 2222
+
+# ========================================
+# 云端服务器操作
+# ========================================
+
+# Step 3: 加载镜像
+bash /tmp/load-image.sh /tmp/docker-images/vpn-web-nextjs-latest.tar.gz
+
+# Step 4: 验证镜像
+docker images
+
+# Step 5: 更新 docker-compose.yml (如果需要)
+# 将服务镜像改为: vpn-web-nextjs:latest
+
+# Step 6: 启动容器
+docker-compose up -d
+```
+
+#### 一键自动化脚本
+
+```bash
+# 本地构建 + 上传 + 远程加载 (一键完成)
+./scripts/build-and-export.sh && \
+./scripts/upload-image.sh root@your-server && \
+./scripts/remote-load.sh root@your-server
+```
+
+#### 自定义配置
+
+```bash
+# 使用不同的压缩工具
+COMPRESSION_TOOL=zstd ./scripts/build-and-export.sh    # zstd (更高压缩率)
+COMPRESSION_TOOL=gzip ./scripts/build-and-export.sh     # gzip (默认)
+COMPRESSION_TOOL=none ./scripts/build-and-export.sh     # 不压缩
+
+# 指定镜像名称和标签
+IMAGE_NAME=my-vpn IMAGE_TAG=v1.0 ./scripts/build-and-export.sh
+
+# 自定义输出目录
+OUTPUT_DIR=/tmp/images ./scripts/build-and-export.sh
+```
+
+### 方案 B: 私有 Docker Registry
+
+适合: **多服务器部署、团队协作、CI/CD 集成**
+
+#### 部署私有 Registry
+
+```bash
+# 在云端服务器上部署 Registry
+docker run -d \
+  -p 5000:5000 \
+  --restart=always \
+  --name registry \
+  -v /data/registry:/var/lib/registry \
+  registry:2
+
+# 或使用 docker-compose (带认证)
+cat > registry-compose.yml <<'EOF'
+version: '3'
+services:
+  registry:
+    image: registry:2
+    ports:
+      - "5000:5000"
+    environment:
+      REGISTRY_AUTH: htpasswd
+      REGISTRY_AUTH_HTPASSWD_PATH: /auth/htpasswd
+      REGISTRY_AUTH_HTPASSWD_REALM: Registry Realm
+    volumes:
+      - ./registry-data:/var/lib/registry
+      - ./auth:/auth
+    restart: always
+EOF
+
+# 创建认证文件
+mkdir auth
+docker run --rm --entrypoint htpasswd httpd:2 -Bbn admin password123 > auth/htpasswd
+
+# 启动 Registry
+docker-compose -f registry-compose.yml up -d
+```
+
+#### 使用私有 Registry
+
+```bash
+# ========================================
+# 本地操作
+# ========================================
+
+# Step 1: 构建镜像
+docker build -t vpn-web-nextjs:latest .
+
+# Step 2: 标记镜像
+docker tag vpn-web-nextjs:latest your-registry.com:5000/vpn-web-nextjs:latest
+
+# Step 3: 推送到私有仓库
+docker login your-registry.com:5000
+docker push your-registry.com:5000/vpn-web-nextjs:latest
+
+# ========================================
+# 云端服务器操作
+# ========================================
+
+# Step 4: 拉取镜像
+docker login your-registry.com:5000
+docker pull your-registry.com:5000/vpn-web-nextjs:latest
+
+# Step 5: 更新 docker-compose.yml
+# 将镜像改为: your-registry.com:5000/vpn-web-nextjs:latest
+
+# Step 6: 启动容器
+docker-compose up -d
+```
+
+#### 配置 docker-compose.yml 使用私有仓库
+
+```yaml
+services:
+  nextjs:
+    image: your-registry.com:5000/vpn-web-nextjs:latest
+    # 移除 build 配置
+    # build:
+    #   context: .
+    #   dockerfile: Dockerfile
+```
+
+### 方案 C: 公共 Docker Registry
+
+适合: **开源项目、公开部署、需要全球访问**
+
+#### Docker Hub
+
+```bash
+# ========================================
+# 本地操作
+# ========================================
+
+# Step 1: 登录 Docker Hub
+docker login
+
+# Step 2: 构建并标记镜像
+docker build -t your-username/vpn-web-nextjs:latest .
+
+# Step 3: 推送镜像
+docker push your-username/vpn-web-nextjs:latest
+
+# ========================================
+# 云端服务器操作
+# ========================================
+
+# Step 4: 拉取镜像
+docker pull your-username/vpn-web-nextjs:latest
+
+# Step 5: 启动容器
+docker-compose up -d
+```
+
+#### 阿里云容器镜像服务
+
+```bash
+# Step 1: 登录阿里云 Registry
+docker login --username=your-aliyun-account registry.cn-hangzhou.aliyuncs.com
+
+# Step 2: 标记镜像
+docker tag vpn-web-nextjs:latest \
+  registry.cn-hangzhou.aliyuncs.com/your-namespace/vpn-web-nextjs:latest
+
+# Step 3: 推送镜像
+docker push registry.cn-hangzhou.aliyuncs.com/your-namespace/vpn-web-nextjs:latest
+
+# Step 4: 云端拉取
+docker pull registry.cn-hangzhou.aliyuncs.com/your-namespace/vpn-web-nextjs:latest
+```
+
+### 性能优化技巧
+
+#### 1. 使用断点续传
+
+```bash
+# rsync 支持断点续传
+rsync -avz --progress \
+  -e "ssh -p 22" \
+  ./docker-images/vpn-web-nextjs-latest.tar.gz \
+  root@your-server:/tmp/
+```
+
+#### 2. 压缩优化
+
+```bash
+# zstd 提供更好的压缩率和速度
+# 安装 zstd
+apt-get install zstd  # Debian/Ubuntu
+yum install zstd      # CentOS/RHEL
+
+# 使用 zstd 压缩
+docker save vpn-web-nextjs:latest | zstd -o vpn-web-nextjs.tar.zst
+
+# 传输后解压并加载
+zstd -d vpn-web-nextjs.tar.zst -c | docker load
+```
+
+#### 3. 并行传输
+
+```bash
+# 使用 pigz 多线程压缩
+docker save vpn-web-nextjs:latest | pigz -9 > vpn-web-nextjs.tar.gz
+
+# 使用 pv 显示进度
+docker save vpn-web-nextjs:latest | pv | gzip > vpn-web-nextjs.tar.gz
+```
+
+#### 4. 网络优化
+
+```bash
+# 使用 scp 压缩传输
+scp -C vpn-web-nextjs.tar.gz root@your-server:/tmp/
+
+# 限制带宽 (避免占满带宽)
+rsync --bwlimit=10000 -avz image.tar.gz root@server:/tmp/
+```
+
+### 镜像瘦身技巧
+
+#### 1. 多阶段构建优化
+
+已在 Dockerfile 中实现:
+- 依赖安装层 (缓存优化)
+- 构建层 (仅保留构建产物)
+- 运行时层 (最小化镜像)
+
+#### 2. 移除开发依赖
+
+```bash
+# package.json 中分离生产和开发依赖
+# 构建时使用 npm ci --production
+```
+
+#### 3. 使用 .dockerignore
+
+已配置忽略:
+- node_modules
+- .git
+- 文档文件
+- 测试文件
+
+#### 4. 查看镜像层
+
+```bash
+# 分析镜像大小
+docker history vpn-web-nextjs:latest
+
+# 使用 dive 工具深度分析
+docker run --rm -it \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  wagoodman/dive:latest vpn-web-nextjs:latest
+```
+
+### 传输时间估算
+
+| 镜像大小 | 10Mbps | 50Mbps | 100Mbps | 1Gbps |
+|---------|--------|--------|---------|-------|
+| 300MB   | 4 分钟  | 48 秒   | 24 秒    | 2.4 秒 |
+| 500MB   | 6.7 分钟| 80 秒   | 40 秒    | 4 秒   |
+| 1GB     | 13 分钟 | 2.7 分钟| 1.3 分钟 | 8 秒   |
+
+**提示**: 实际传输时间还需考虑压缩、解压时间和网络延迟。
+
+### 故障排查
+
+#### 镜像损坏
+
+```bash
+# 验证 SHA256 校验和
+sha256sum -c vpn-web-nextjs-latest.tar.gz.sha256
+
+# 如果校验失败，重新下载
+```
+
+#### 空间不足
+
+```bash
+# 检查磁盘空间
+df -h
+
+# 清理 Docker 缓存
+docker system prune -a
+
+# 删除旧镜像
+docker image prune -a
+```
+
+#### 加载失败
+
+```bash
+# 查看 Docker 日志
+journalctl -u docker.service
+
+# 尝试手动解压并加载
+gunzip -c image.tar.gz | docker load -
 ```
 
 ## ⚙️ 配置说明
@@ -571,6 +906,327 @@ location /_next/static {
     create 0640 nginx nginx
     sharedscripts
 }
+```
+
+## 🚀 GitHub Actions CI/CD 自动部署
+
+### CI/CD 架构
+
+```
+GitHub Push → Actions 构建 → 推送 Registry → SSH 部署 → 健康检查
+```
+
+### 部署方案对比
+
+| 方案 | 触发方式 | 适用场景 | 优点 | 缺点 |
+|-----|---------|---------|------|------|
+| **Registry 部署** | push to main | 生产环境 | 标准流程、支持回滚 | 需要 Registry |
+| **SSH 直接部署** | 手动触发 | 无 Registry 环境 | 无需 Registry | 传输慢 |
+| **构建测试** | PR/push | 开发测试 | 自动验证 | 仅测试不部署 |
+
+### 配置步骤
+
+#### 1. 配置 GitHub Secrets
+
+在仓库 Settings → Secrets and variables → Actions 中添加:
+
+**Registry 凭证** (方案 A 必需):
+```
+DOCKER_USERNAME    - Docker Hub 用户名
+DOCKER_PASSWORD    - Docker Hub 密码或 Token
+```
+
+**服务器访问** (必需):
+```
+SSH_HOST          - 服务器 IP 或域名
+SSH_PORT          - SSH 端口 (默认 22)
+SSH_USERNAME      - SSH 用户名 (如 root)
+SSH_PRIVATE_KEY   - SSH 私钥 (完整内容)
+```
+
+**应用环境变量** (必需):
+```
+NEXT_PUBLIC_API_BASE              - API 后端地址
+NEXT_PUBLIC_TURNSTILE_SITE_KEY   - Cloudflare Turnstile Key
+DOMAIN                            - 域名 (如 superjiasu.top)
+EMAIL                             - 管理员邮箱
+```
+
+#### 2. 生成 SSH 密钥对
+
+```bash
+# 在本地生成密钥对
+ssh-keygen -t rsa -b 4096 -C "github-actions" -f ~/.ssh/github_actions_key
+
+# 将公钥添加到服务器
+ssh-copy-id -i ~/.ssh/github_actions_key.pub user@your-server
+
+# 复制私钥内容到 GitHub Secrets
+cat ~/.ssh/github_actions_key
+# 完整复制输出内容到 SSH_PRIVATE_KEY
+```
+
+#### 3. 选择部署方式
+
+##### 方案 A: Registry 自动部署 (推荐)
+
+**优势**:
+- ✅ 自动化程度高
+- ✅ 支持版本管理和回滚
+- ✅ 适合多服务器部署
+- ✅ 镜像可复用
+
+**配置**:
+
+1. 修改服务器 `.env.docker`:
+```bash
+# 使用 Docker Hub 示例
+DOCKER_REGISTRY=docker.io
+DOCKER_USERNAME=your-username
+IMAGE_TAG=latest
+```
+
+2. 服务器上使用生产配置:
+```bash
+cd /root/self_code/web_vpn_v0_test
+
+# 使用生产配置启动
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+```
+
+3. 推送代码触发部署:
+```bash
+git add .
+git commit -m "feat: update feature"
+git push origin main  # 自动触发部署
+```
+
+**工作流程**:
+1. GitHub Actions 检测到 main 分支推送
+2. 构建 Docker 镜像 (使用 pnpm)
+3. 推送镜像到 Docker Hub
+4. SSH 到服务器
+5. 执行 `deploy-from-registry.sh` 脚本
+6. 拉取最新镜像并重启服务
+7. 健康检查验证部署
+
+##### 方案 B: SSH 直接部署
+
+**优势**:
+- ✅ 无需 Registry
+- ✅ 完全控制
+
+**使用**:
+```bash
+# 在 GitHub Actions 页面手动触发
+Actions → Deploy to Production (SSH Direct) → Run workflow
+```
+
+选择压缩方式:
+- `gzip` - 标准压缩 (推荐)
+- `zstd` - 高压缩率
+- `none` - 无压缩 (最快)
+
+#### 4. Registry 选择建议
+
+##### Docker Hub (推荐国际项目)
+
+```bash
+# 注册 Docker Hub: https://hub.docker.com
+# 创建 Access Token: Account Settings → Security → New Access Token
+
+# GitHub Secrets 配置:
+DOCKER_USERNAME=your-dockerhub-username
+DOCKER_PASSWORD=dckr_pat_xxxxxxxxxxxxx
+```
+
+**免费额度**: 无限公开镜像、1 个私有仓库
+
+##### 阿里云容器镜像 (推荐国内项目)
+
+```bash
+# 注册阿里云: https://cr.console.aliyun.com
+# 创建命名空间和仓库
+
+# 修改 .github/workflows/deploy-registry.yml:
+env:
+  REGISTRY: registry.cn-hangzhou.aliyuncs.com
+  IMAGE_NAME: your-namespace/vpn-web-nextjs
+
+# GitHub Secrets 配置:
+DOCKER_USERNAME=your-aliyun-account
+DOCKER_PASSWORD=your-aliyun-password
+```
+
+**优势**: 国内访问快、免费个人版
+
+### 工作流说明
+
+#### deploy-registry.yml
+- **触发**: push to main, tags (v*), 手动
+- **作业**:
+  1. `build-and-push` - 构建并推送镜像
+  2. `deploy` - 部署到服务器
+  3. `notify` - 通知部署状态
+
+#### deploy-ssh.yml
+- **触发**: 手动
+- **作业**: 构建 → 传输 → 加载 → 部署
+
+#### build-test.yml
+- **触发**: PR, push to develop
+- **作业**:
+  1. `test-build` - Docker 构建测试
+  2. `lint` - 代码检查
+  3. `summary` - 结果汇总
+
+### 部署管理
+
+#### 查看部署状态
+
+```bash
+# GitHub Actions 页面
+https://github.com/your-username/your-repo/actions
+
+# 服务器上查看容器
+ssh user@server
+docker-compose ps
+docker-compose logs -f nextjs
+```
+
+#### 手动触发部署
+
+```bash
+# 在 GitHub Actions 页面
+Actions → Deploy to Production (Registry) → Run workflow
+```
+
+#### 回滚到上一版本
+
+```bash
+# SSH 到服务器
+ssh user@server
+cd /root/self_code/web_vpn_v0_test
+
+# 查看备份镜像
+docker images | grep backup
+
+# 回滚
+docker tag vpn-web-nextjs:backup-20241003-120000 vpn-web-nextjs:latest
+docker-compose restart nextjs
+```
+
+#### 查看部署历史
+
+```bash
+# GitHub Actions 历史记录
+Actions → All workflows → 选择工作流
+
+# 服务器上查看镜像历史
+docker images vpn-web-nextjs
+```
+
+### 高级配置
+
+#### 多环境部署
+
+```yaml
+# .github/workflows/deploy-staging.yml
+on:
+  push:
+    branches:
+      - develop
+
+env:
+  IMAGE_NAME: vpn-web-nextjs:staging
+```
+
+#### 通知集成
+
+在 `deploy-registry.yml` 的 `notify` 作业中添加:
+
+```yaml
+# Slack 通知
+- name: Slack notification
+  uses: 8398a7/action-slack@v3
+  with:
+    status: ${{ job.status }}
+    webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+
+# 企业微信通知
+- name: WeChat Work notification
+  run: |
+    curl -X POST ${{ secrets.WECHAT_WEBHOOK }} \
+      -H 'Content-Type: application/json' \
+      -d '{"msgtype":"text","text":{"content":"部署成功"}}'
+```
+
+#### 自动打标签
+
+```bash
+# 创建版本标签触发发布
+git tag v1.0.0
+git push origin v1.0.0
+
+# 自动构建 vpn-web-nextjs:v1.0.0 和 vpn-web-nextjs:latest
+```
+
+### 故障排查
+
+#### Actions 构建失败
+
+```bash
+# 查看 Actions 日志
+GitHub → Actions → 失败的工作流 → 查看详细日志
+
+# 常见问题:
+1. pnpm 版本不兼容 → 检查 Dockerfile
+2. 环境变量未配置 → 检查 GitHub Secrets
+3. 权限不足 → 检查 SSH 密钥
+```
+
+#### 部署失败
+
+```bash
+# SSH 到服务器查看
+ssh user@server
+cd /root/self_code/web_vpn_v0_test
+
+# 查看容器日志
+docker-compose logs nextjs
+
+# 查看部署脚本日志
+cat /tmp/deploy-from-registry.log
+```
+
+#### 健康检查失败
+
+```bash
+# 服务器上手动测试
+curl http://localhost:3000/api/health
+
+# 如果失败,查看容器状态
+docker-compose ps
+docker-compose exec nextjs wget -O- http://localhost:3000/api/health
+```
+
+### 性能优化
+
+#### 构建缓存
+
+GitHub Actions 已配置:
+```yaml
+cache-from: type=registry,ref=$IMAGE:buildcache
+cache-to: type=registry,ref=$IMAGE:buildcache,mode=max
+```
+
+**效果**: 二次构建提速 50-70%
+
+#### 并行构建
+
+```yaml
+# 多平台构建 (可选)
+platforms: linux/amd64,linux/arm64
 ```
 
 ## 🔒 安全加固

@@ -91,18 +91,18 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -p ${{ secrets.SSH_PORT || 22 }} -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+          ssh-keyscan -p ${{ secrets.SSH_PORT || 22 }} -H "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts
 
       - name: Copy deployment script to server
         run: |
           scp -P ${{ secrets.SSH_PORT || 22 }} \
             scripts/deploy-from-registry.sh \
-            ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }}:/tmp/
+            "${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }}:/tmp/"
 
       - name: Deploy on server
         run: |
           ssh -p ${{ secrets.SSH_PORT || 22 }} \
-            ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} \
+            "${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }}" \
             "bash /tmp/deploy-from-registry.sh \
               ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest \
               ${{ secrets.DOCKER_USERNAME }} \
@@ -131,7 +131,7 @@ jobs:
         run: |
           rm -f ~/.ssh/id_rsa
           ssh -p ${{ secrets.SSH_PORT || 22 }} \
-            ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} \
+            "${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }}" \
             "rm -f /tmp/deploy-from-registry.sh" || true
 
   notify:

@@ -80,37 +80,37 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -p ${{ secrets.SSH_PORT || 22 }} -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+          ssh-keyscan -p ${{ secrets.SSH_PORT || 22 }} -H "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts
 
       - name: Upload image to server
         run: |
           # Create remote directory
           ssh -p ${{ secrets.SSH_PORT || 22 }} \
-            ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} \
+            "${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }}" \
             "mkdir -p /tmp/docker-images"
 
           # Upload image and checksum
           scp -P ${{ secrets.SSH_PORT || 22 }} \
             /tmp/docker-images/${{ env.IMAGE_FILE }} \
             /tmp/docker-images/${{ env.IMAGE_FILE }}.sha256 \
-            ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }}:/tmp/docker-images/
+            "${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }}:/tmp/docker-images/"
 
       - name: Copy load script to server
         run: |
           scp -P ${{ secrets.SSH_PORT || 22 }} \
             scripts/load-image.sh \
-            ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }}:/tmp/
+            "${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }}:/tmp/"
 
       - name: Load and deploy image on server
         run: |
           ssh -p ${{ secrets.SSH_PORT || 22 }} \
-            ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} \
+            "${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }}" \
             "bash /tmp/load-image.sh /tmp/docker-images/${{ env.IMAGE_FILE }}"
 
       - name: Restart services
         run: |
           ssh -p ${{ secrets.SSH_PORT || 22 }} \
-            ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} \
+            "${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }}" \
             "cd /root/self_code/web_vpn_v0_test && docker-compose restart nextjs"
 
       - name: Health check
@@ -136,5 +136,5 @@ jobs:
         run: |
           rm -f ~/.ssh/id_rsa
           ssh -p ${{ secrets.SSH_PORT || 22 }} \
-            ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} \
+            "${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }}" \
             "rm -rf /tmp/docker-images /tmp/load-image.sh" || true

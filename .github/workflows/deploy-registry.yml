@@ -86,27 +86,68 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Debug and Clean Secrets
+        run: |
+          echo "========== Secrets Validation =========="
+
+          # Clean secrets by removing leading/trailing whitespace
+          SSH_HOST_CLEAN=$(echo "${{ secrets.SSH_HOST }}" | xargs)
+          SSH_USERNAME_CLEAN=$(echo "${{ secrets.SSH_USERNAME }}" | xargs)
+          SSH_PORT_CLEAN=$(echo "${{ secrets.SSH_PORT || 22 }}" | xargs)
+
+          # Debug output (masked)
+          echo "SSH_HOST length: ${#SSH_HOST_CLEAN}"
+          echo "SSH_HOST (first 3 chars): ${SSH_HOST_CLEAN:0:3}***"
+          echo "SSH_USERNAME length: ${#SSH_USERNAME_CLEAN}"
+          echo "SSH_USERNAME (first char): ${SSH_USERNAME_CLEAN:0:1}***"
+          echo "SSH_PORT: $SSH_PORT_CLEAN"
+
+          # Validate
+          if [ -z "$SSH_HOST_CLEAN" ]; then
+            echo "ERROR: SSH_HOST is empty after cleanup"
+            exit 1
+          fi
+          if [ -z "$SSH_USERNAME_CLEAN" ]; then
+            echo "ERROR: SSH_USERNAME is empty after cleanup"
+            exit 1
+          fi
+
+          # Export cleaned values
+          echo "SSH_HOST=$SSH_HOST_CLEAN" >> $GITHUB_ENV
+          echo "SSH_USERNAME=$SSH_USERNAME_CLEAN" >> $GITHUB_ENV
+          echo "SSH_PORT=$SSH_PORT_CLEAN" >> $GITHUB_ENV
+
+          echo "✓ Secrets validated and cleaned"
+
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -p ${{ secrets.SSH_PORT || 22 }} -H "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts
+
+          echo "Setting up SSH known_hosts for: $SSH_HOST"
+          ssh-keyscan -p $SSH_PORT -H "$SSH_HOST" >> ~/.ssh/known_hosts
+
+          echo "✓ SSH setup complete"
 
       - name: Copy deployment script to server
         run: |
-          scp -P ${{ secrets.SSH_PORT || 22 }} \
+          echo "Copying deployment script to: $SSH_USERNAME@$SSH_HOST:/tmp/"
+          scp -P $SSH_PORT \
             scripts/deploy-from-registry.sh \
-            "${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }}:/tmp/"
+            "$SSH_USERNAME@$SSH_HOST:/tmp/"
+          echo "✓ Script copied successfully"
 
       - name: Deploy on server
         run: |
-          ssh -p ${{ secrets.SSH_PORT || 22 }} \
-            "${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }}" \
+          echo "Deploying to: $SSH_USERNAME@$SSH_HOST"
+          ssh -p $SSH_PORT \
+            "$SSH_USERNAME@$SSH_HOST" \
             "bash /tmp/deploy-from-registry.sh \
               ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest \
               ${{ secrets.DOCKER_USERNAME }} \
               ${{ secrets.DOCKER_PASSWORD }}"
+          echo "✓ Deployment complete"
 
       - name: Health check
         run: |
@@ -130,9 +171,12 @@ jobs:
         if: always()
         run: |
           rm -f ~/.ssh/id_rsa
-          ssh -p ${{ secrets.SSH_PORT || 22 }} \
-            "${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }}" \
-            "rm -f /tmp/deploy-from-registry.sh" || true
+          if [ -n "$SSH_HOST" ] && [ -n "$SSH_USERNAME" ]; then
+            ssh -p $SSH_PORT \
+              "$SSH_USERNAME@$SSH_HOST" \
+              "rm -f /tmp/deploy-from-registry.sh" || true
+          fi
+          echo "✓ Cleanup complete"
 
   notify:
     name: Notify Deployment Status

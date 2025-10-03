@@ -28,7 +28,10 @@
       "mcp__serena__list_memories",
       "mcp__serena__check_onboarding_performed",
       "Bash(cat:*)",
-      "Read(//root/self_code/web_backend/routes/**)"
+      "Read(//root/self_code/web_backend/routes/**)",
+      "Bash(git -C /root/self_code/web_vpn_v0_test status)",
+      "Bash(git -C /root/self_code/web_vpn_v0_test branch --show-current)",
+      "Bash(chmod:*)"
     ],
     "deny": [],
     "ask": []

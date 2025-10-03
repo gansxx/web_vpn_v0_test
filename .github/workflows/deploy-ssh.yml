@@ -154,9 +154,17 @@ jobs:
       - name: Restart services
         run: |
           echo "Restarting services on: $SSH_USERNAME@$SSH_HOST"
+
+          # Set project directory (use secret or default to /opt/vpn-web)
+          PROJECT_DIR="${{ secrets.PROJECT_DIR }}"
+          if [ -z "$PROJECT_DIR" ]; then
+            PROJECT_DIR="/opt/vpn-web"
+            echo "⚠ PROJECT_DIR not set in secrets, using default: $PROJECT_DIR"
+          fi
+
           ssh -p $SSH_PORT \
             "$SSH_USERNAME@$SSH_HOST" \
-            "cd /root/self_code/web_vpn_v0_test && docker-compose restart nextjs"
+            "cd $PROJECT_DIR && docker-compose restart nextjs"
           echo "✓ Services restarted successfully"
 
       - name: Health check

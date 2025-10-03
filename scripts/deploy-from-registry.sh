@@ -15,17 +15,22 @@ NC='\033[0m'
 # Check arguments
 if [ $# -lt 1 ]; then
     echo -e "${RED}错误: 缺少镜像名称${NC}"
-    echo "用法: $0 <image:tag> [registry_username] [registry_password]"
-    echo "示例: $0 docker.io/username/vpn-web-nextjs:latest username password"
+    echo "用法: $0 <image:tag> [registry_username] [registry_password] [project_dir]"
+    echo "示例: $0 docker.io/username/vpn-web-nextjs:latest username password /opt/app"
     exit 1
 fi
 
 IMAGE="$1"
 REGISTRY_USER="${2:-}"
 REGISTRY_PASS="${3:-}"
+PROJECT_DIR="${4:-}"
 
-# Configuration
-PROJECT_DIR="${PROJECT_DIR:-/root/self_code/web_vpn_v0_test}"
+# Configuration - use provided dir or fall back to current directory
+if [ -z "$PROJECT_DIR" ]; then
+    PROJECT_DIR=$(pwd)
+    echo -e "${YELLOW}⚠ PROJECT_DIR未指定，使用当前目录: $PROJECT_DIR${NC}"
+fi
+
 BACKUP_TAG="backup-$(date +%Y%m%d-%H%M%S)"
 
 print_header() {
@@ -82,11 +87,46 @@ fi
 REGISTRY_NAME=$(echo "$IMAGE" | sed 's|docker.io/||' | sed 's|:[^:]*$||')
 docker tag "$IMAGE" "vpn-web-nextjs:latest"
 
-# Navigate to project directory
+# Check and setup project directory
+print_header "检查项目目录"
+
+if [ ! -d "$PROJECT_DIR" ]; then
+    echo -e "${YELLOW}⚠ 项目目录不存在，创建目录: $PROJECT_DIR${NC}"
+    mkdir -p "$PROJECT_DIR"
+fi
+
 cd "$PROJECT_DIR" || {
-    echo -e "${RED}✗ 项目目录不存在: $PROJECT_DIR${NC}"
+    echo -e "${RED}✗ 无法进入项目目录: $PROJECT_DIR${NC}"
     exit 1
 }
+
+echo -e "${GREEN}✓ 工作目录: $PROJECT_DIR${NC}"
+
+# Check if docker-compose.yml exists
+if [ ! -f "docker-compose.yml" ]; then
+    echo -e "${YELLOW}⚠ docker-compose.yml 不存在，创建基础配置...${NC}"
+
+    cat > docker-compose.yml <<'COMPOSE_EOF'
+services:
+  nextjs:
+    image: vpn-web-nextjs:latest
+    container_name: vpn-web-nextjs
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    networks:
+      - vpn-network
+
+networks:
+  vpn-network:
+    external: true
+    name: vpn-network
+COMPOSE_EOF
+
+    echo -e "${GREEN}✓ 已创建默认 docker-compose.yml${NC}"
+fi
 
 # Stop and remove old container
 print_header "停止旧容器"

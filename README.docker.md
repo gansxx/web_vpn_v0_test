@@ -233,10 +233,10 @@ curl -I https://your-domain.com
 # 文件大小: 约 300-500MB (压缩后)
 
 # Step 2: 上传到云端服务器
-./scripts/upload-image.sh root@your-server-ip
+./scripts/upload-image.sh root@8.217.223.134
 
 # 或指定端口
-./scripts/upload-image.sh root@your-server-ip 2222
+./scripts/upload-image.sh root@8.217.223.134 2222
 
 # ========================================
 # 云端服务器操作
@@ -260,8 +260,8 @@ docker-compose up -d
 ```bash
 # 本地构建 + 上传 + 远程加载 (一键完成)
 ./scripts/build-and-export.sh && \
-./scripts/upload-image.sh root@your-server && \
-./scripts/remote-load.sh root@your-server
+./scripts/upload-image.sh root@8.217.223.134 && \
+./scripts/remote-load.sh root@8.217.223.134
 ```
 
 #### 自定义配置
@@ -928,6 +928,8 @@ GitHub Push → Actions 构建 → 推送 Registry → SSH 部署 → 健康检�
 
 #### 1. 配置 GitHub Secrets
 
+**详细配置指南**: 请查看 [docs/GITHUB_SECRETS_SETUP.md](docs/GITHUB_SECRETS_SETUP.md)
+
 在仓库 Settings → Secrets and variables → Actions 中添加:
 
 **Registry 凭证** (方案 A 必需):
@@ -939,6 +941,7 @@ DOCKER_PASSWORD    - Docker Hub 密码或 Token
 **服务器访问** (必需):
 ```
 SSH_HOST          - 服务器 IP 或域名
+                    当前值: 8.217.223.134
 SSH_PORT          - SSH 端口 (默认 22)
 SSH_USERNAME      - SSH 用户名 (如 root)
 SSH_PRIVATE_KEY   - SSH 私钥 (完整内容)
@@ -948,9 +951,14 @@ SSH_PRIVATE_KEY   - SSH 私钥 (完整内容)
 ```
 NEXT_PUBLIC_API_BASE              - API 后端地址
 NEXT_PUBLIC_TURNSTILE_SITE_KEY   - Cloudflare Turnstile Key
-DOMAIN                            - 域名 (如 superjiasu.top)
+DOMAIN                            - 域名 (如 vpn.example.com)
 EMAIL                             - 管理员邮箱
 ```
+
+**⚠️ 重要提示**:
+- 新服务器IP已更新为: **8.217.223.134**
+- 请确保更新 GitHub Secrets 中的 `SSH_HOST` 值
+- 完整配置步骤请参考: [GitHub Secrets 配置指南](docs/GITHUB_SECRETS_SETUP.md)
 
 #### 2. 生成 SSH 密钥对
 

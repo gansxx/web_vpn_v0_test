@@ -35,7 +35,9 @@
       "mcp__sequential-thinking__sequentialthinking",
       "Bash(./scripts/build-and-export.sh:*)",
       "Bash(./scripts/upload-image.sh:*)",
-      "Bash(./scripts/remote-load.sh:*)"
+      "Bash(./scripts/remote-load.sh:*)",
+      "Bash(docker system:*)",
+      "Read(//proc/**)"
     ],
     "deny": [],
     "ask": []

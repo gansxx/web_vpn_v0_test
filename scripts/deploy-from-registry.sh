@@ -131,10 +131,10 @@ fi
 # Stop and remove old container
 print_header "停止旧容器"
 
-if docker-compose ps | grep -q "vpn-nextjs"; then
+if docker compose ps | grep -q "vpn-nextjs"; then
     echo -e "${YELLOW}停止旧容器...${NC}"
-    docker-compose stop nextjs
-    docker-compose rm -f nextjs
+    docker compose stop nextjs
+    docker compose rm -f nextjs
     echo -e "${GREEN}✓ 旧容器已停止${NC}"
 else
     echo -e "${YELLOW}⚠ 未找到运行中的容器${NC}"
@@ -144,7 +144,7 @@ fi
 print_header "启动新容器"
 
 echo -e "${YELLOW}启动容器...${NC}"
-docker-compose up -d nextjs
+docker compose up -d nextjs
 
 # Wait for container to start
 echo -e "${YELLOW}等待容器启动...${NC}"

@@ -1,10 +1,10 @@
 export function ClientDownloads() {
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-semibold text-gray-900">Windows电脑，下载对应客户端</h3>
+      <h3 className="text-lg font-semibold text-gray-900">VPN客户端下载</h3>
 
       <div className="space-y-3">
-        <div className="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200">
+        {/* <div className="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200">
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
               <svg className="w-5 h-5 text-gray-600" fill="currentColor" viewBox="0 0 24 24">
@@ -16,7 +16,7 @@ export function ClientDownloads() {
           <div className="w-8 h-8 bg-gray-100 rounded border-2 border-dashed border-gray-300 flex items-center justify-center">
             <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
           </div>
-        </div>
+        </div> */}
 
         <div className="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200">
           <div className="flex items-center space-x-3">

@@ -5,9 +5,8 @@ import './globals.css'
 
 // 定义页面元数据
 export const metadata: Metadata = {
-  title: 'v0 App',
-  description: 'Created with v0',
-  generator: 'v0.app',
+  title: 'Z加速_超大流量,超实惠的VPN服务',
+  // Next.js 会自动识别 app/icon.svg 作为 favicon
 }
 
 // 定义全局的布局属性，children 是页面内容且只读

@@ -1,0 +1,13 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Outer red circle -->
+  <circle cx="16" cy="16" r="16" fill="#DC2626"/>
+
+  <!-- Middle white circle -->
+  <circle cx="16" cy="16" r="10" fill="white"/>
+
+  <!-- Inner red circle -->
+  <circle cx="16" cy="16" r="8" fill="#DC2626"/>
+
+  <!-- Small white dot (top-left) -->
+  <circle cx="14" cy="14" r="3" fill="white"/>
+</svg>

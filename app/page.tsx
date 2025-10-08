@@ -14,8 +14,11 @@ export default function HomePage() {
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 items-center justify-between px-6">
           <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <div className="w-5 h-5 bg-primary-foreground rounded-sm"></div>
+            <div className="w-8 h-8 bg-red-600 rounded-full flex items-center justify-center">
+              <div className="w-5 h-5 bg-white rounded-full relative">
+                <div className="absolute inset-0.5 bg-red-600 rounded-full"></div>
+                <div className="absolute top-0.5 left-0.5 w-1.5 h-1.5 bg-white rounded-full"></div>
+              </div>
             </div>
             <span className="text-xl font-bold text-foreground">Z加速</span>
           </div>
@@ -108,12 +111,12 @@ export default function HomePage() {
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth={2}
-                      d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                      d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"
                     />
                   </svg>
                 </div>
-                <h3 className="text-xl font-semibold text-foreground mb-3">安全可靠</h3>
-                <p className="text-muted-foreground">军用级加密技术，保护您的隐私和数据安全</p>
+                <h3 className="text-xl font-semibold text-foreground mb-3">超大流量</h3>
+                <p className="text-muted-foreground">海量带宽资源，不限速不限流，畅享高清视频和大文件下载</p>
               </CardContent>
             </Card>
 
@@ -125,12 +128,12 @@ export default function HomePage() {
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth={2}
-                      d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"
+                      d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                     />
                   </svg>
                 </div>
-                <h3 className="text-xl font-semibold text-foreground mb-3">多平台支持</h3>
-                <p className="text-muted-foreground">支持Windows、Mac、iOS、Android等多个平台</p>
+                <h3 className="text-xl font-semibold text-foreground mb-3">超高性价比</h3>
+                <p className="text-muted-foreground">合理定价，物超所值，让每个用户都能享受优质的网络服务</p>
               </CardContent>
             </Card>
           </div>
@@ -180,28 +183,28 @@ export default function HomePage() {
                     <div className="text-sm font-medium">YouTube</div>
                   </Card>
                   <Card className="p-4 hover:shadow-lg transition-all duration-300">
-                    <div className="w-8 h-8 bg-red-600 rounded-lg mb-2 flex items-center justify-center">
+                    <div className="w-8 h-8 bg-black rounded-lg mb-2 flex items-center justify-center">
                       <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M5.398 0v.006c3.028 8.556 5.37 15.175 8.348 23.596 2.344.058 4.85.398 4.854.398-2.8-7.924-5.923-16.747-8.487-24zm8.489 0v9.63L18.6 22.951c-.043-7.86-.004-15.71.002-22.95zM5.398 1.05V24c8.914-.494 16.52-.418 16.52-.418V1.05z" />
+                        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
                       </svg>
                     </div>
-                    <div className="text-sm font-medium">Netflix</div>
+                    <div className="text-sm font-medium">X (Twitter)</div>
                   </Card>
                   <Card className="p-4 hover:shadow-lg transition-all duration-300">
-                    <div className="w-8 h-8 bg-blue-900 rounded-lg mb-2 flex items-center justify-center">
+                    <div className="w-8 h-8 bg-gray-700 rounded-lg mb-2 flex items-center justify-center">
                       <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M17.523 15.3414c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.5511 0 .9993.4482.9993.9993.0001.5511-.4482.9997-.9993.9997m-11.046 0c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.5511 0 .9993.4482.9993.9993 0 .5511-.4482.9997-.9993.9997m11.4045-6.02l1.9973-3.4592a.416.416 0 00-.1518-.5972.416.416 0 00-.5972.1518l-2.0223 3.503C15.5902 8.2439 13.8533 7.8508 12 7.8508s-3.5902.3931-5.1333 1.0989L4.8442 5.4467a.4161.4161 0 00-.5972-.1518.416.416 0 00-.1518.5972L6.0927 9.3214C2.8207 11.0806.9999 13.9222.9999 17.2623c0 .5511.4482.9993.9993.9993h19.0016c.5511 0 .9993-.4482.9993-.9993-.0001-3.3401-1.8209-6.1817-5.0929-7.9409z" />
+                        <path d="M11.979 0C5.678 0 .511 4.86.022 11.037l6.432 2.658c.545-.371 1.203-.59 1.912-.59.063 0 .125.004.188.006l2.861-4.142V8.91c0-2.495 2.028-4.524 4.524-4.524 2.494 0 4.524 2.031 4.524 4.527s-2.03 4.525-4.524 4.525h-.105l-4.076 2.911c0 .052.004.105.004.159 0 1.875-1.515 3.396-3.39 3.396-1.635 0-3.016-1.173-3.331-2.727L.436 15.27C1.862 20.307 6.486 24 11.979 24c6.627 0 11.999-5.373 11.999-12S18.605 0 11.979 0zM7.54 18.21l-1.473-.61c.262.543.714.999 1.314 1.25 1.297.539 2.793-.076 3.332-1.375.263-.63.264-1.319.005-1.949s-.75-1.121-1.377-1.383c-.624-.26-1.29-.249-1.878-.03l1.523.63c.956.4 1.409 1.5 1.009 2.455-.397.957-1.497 1.41-2.454 1.012H7.54zm11.415-9.303c0-1.662-1.353-3.015-3.015-3.015-1.665 0-3.015 1.353-3.015 3.015 0 1.665 1.35 3.015 3.015 3.015 1.663 0 3.015-1.35 3.015-3.015zm-5.273-.005c0-1.252 1.013-2.266 2.265-2.266 1.249 0 2.266 1.014 2.266 2.266 0 1.251-1.017 2.265-2.266 2.265-1.253 0-2.265-1.014-2.265-2.265z" />
                       </svg>
                     </div>
                     <div className="text-sm font-medium">Steam</div>
                   </Card>
                   <Card className="p-4 hover:shadow-lg transition-all duration-300">
-                    <div className="w-8 h-8 bg-indigo-500 rounded-lg mb-2 flex items-center justify-center">
+                    <div className="w-8 h-8 bg-green-600 rounded-lg mb-2 flex items-center justify-center">
                       <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1277c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419-.0190 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1568 2.4189Z" />
+                        <path d="M22.282 9.821a5.985 5.985 0 0 0-.516-4.91 6.046 6.046 0 0 0-6.51-2.9A6.065 6.065 0 0 0 4.981 4.18a5.985 5.985 0 0 0-3.998 2.9 6.046 6.046 0 0 0 .743 7.097 5.98 5.98 0 0 0 .51 4.911 6.051 6.051 0 0 0 6.515 2.9A5.985 5.985 0 0 0 13.26 24a6.056 6.056 0 0 0 5.772-4.206 5.99 5.99 0 0 0 3.997-2.9 6.056 6.056 0 0 0-.747-7.073zM13.26 22.43a4.476 4.476 0 0 1-2.876-1.04l.141-.081 4.779-2.758a.795.795 0 0 0 .392-.681v-6.737l2.02 1.168a.071.071 0 0 1 .038.052v5.583a4.504 4.504 0 0 1-4.494 4.494zM3.6 18.304a4.47 4.47 0 0 1-.535-3.014l.142.085 4.783 2.759a.771.771 0 0 0 .78 0l5.843-3.369v2.332a.08.08 0 0 1-.033.062L9.74 19.95a4.5 4.5 0 0 1-6.14-1.646zM2.34 7.896a4.485 4.485 0 0 1 2.366-1.973V11.6a.766.766 0 0 0 .388.676l5.815 3.355-2.02 1.168a.076.076 0 0 1-.071 0l-4.83-2.786A4.504 4.504 0 0 1 2.34 7.872zm16.597 3.855l-5.833-3.387L15.119 7.2a.076.076 0 0 1 .071 0l4.83 2.791a4.494 4.494 0 0 1-.676 8.105v-5.678a.79.79 0 0 0-.407-.667zm2.01-3.023l-.141-.085-4.774-2.782a.776.776 0 0 0-.785 0L9.409 9.23V6.897a.066.066 0 0 1 .028-.061l4.83-2.787a4.5 4.5 0 0 1 6.68 4.66zm-12.64 4.135l-2.02-1.164a.08.08 0 0 1-.038-.057V6.075a4.5 4.5 0 0 1 7.375-3.453l-.142.08L8.704 5.46a.795.795 0 0 0-.393.681zm1.097-2.365l2.602-1.5 2.607 1.5v2.999l-2.597 1.5-2.607-1.5z" />
                       </svg>
                     </div>
-                    <div className="text-sm font-medium">Discord</div>
+                    <div className="text-sm font-medium">ChatGPT</div>
                   </Card>
                 </div>
               </div>
@@ -277,7 +280,8 @@ export default function HomePage() {
           </div>
 
           <div className="grid md:grid-cols-4 gap-6 max-w-4xl mx-auto">
-            <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+            {/* Android - 已注释 */}
+            {/* <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
               <CardContent className="p-6 text-center">
                 <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center mx-auto mb-4">
                   <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="currentColor">
@@ -289,7 +293,7 @@ export default function HomePage() {
                   下载
                 </Button>
               </CardContent>
-            </Card>
+            </Card> */}
 
             <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
               <CardContent className="p-6 text-center">
@@ -305,7 +309,8 @@ export default function HomePage() {
               </CardContent>
             </Card>
 
-            <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+            {/* macOS - 已注释 */}
+            {/* <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
               <CardContent className="p-6 text-center">
                 <div className="w-12 h-12 bg-gray-800 rounded-lg flex items-center justify-center mx-auto mb-4">
                   <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="currentColor">
@@ -317,9 +322,10 @@ export default function HomePage() {
                   下载
                 </Button>
               </CardContent>
-            </Card>
+            </Card> */}
 
-            <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+            {/* iOS - 已注释 */}
+            {/* <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
               <CardContent className="p-6 text-center">
                 <div className="w-12 h-12 bg-gray-800 rounded-lg flex items-center justify-center mx-auto mb-4">
                   <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="currentColor">
@@ -331,7 +337,7 @@ export default function HomePage() {
                   教程
                 </Button>
               </CardContent>
-            </Card>
+            </Card> */}
           </div>
         </div>
       </section>
@@ -341,8 +347,11 @@ export default function HomePage() {
           <div className="grid md:grid-cols-4 gap-8">
             <div>
               <div className="flex items-center space-x-3 mb-4">
-                <div className="w-8 h-8 bg-primary-foreground rounded-lg flex items-center justify-center">
-                  <div className="w-5 h-5 bg-primary rounded-sm"></div>
+                <div className="w-8 h-8 bg-red-600 rounded-full flex items-center justify-center">
+                  <div className="w-5 h-5 bg-white rounded-full relative">
+                    <div className="absolute inset-0.5 bg-red-600 rounded-full"></div>
+                    <div className="absolute top-0.5 left-0.5 w-1.5 h-1.5 bg-white rounded-full"></div>
+                  </div>
                 </div>
                 <span className="text-xl font-bold">Z加速</span>
               </div>

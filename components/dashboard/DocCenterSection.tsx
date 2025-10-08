@@ -66,7 +66,7 @@ export function DocCenterSection() {
                 </button>
               </div>
 
-              <div className="bg-white rounded-lg p-4 border border-gray-200 hover:shadow-md transition-shadow">
+              {/* <div className="bg-white rounded-lg p-4 border border-gray-200 hover:shadow-md transition-shadow">
                 <h4 className="font-medium text-gray-900 mb-2">用户社区</h4>
                 <p className="text-gray-600 text-sm mb-3">加入我们的Telegram群组，与其他用户交流</p>
                 <button className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center space-x-1">
@@ -75,7 +75,7 @@ export function DocCenterSection() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                   </svg>
                 </button>
-              </div>
+              </div> */}
             </div>
           </div>
         </div>

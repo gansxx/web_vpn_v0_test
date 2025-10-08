@@ -2,6 +2,7 @@
 
 # dependencies
 /node_modules
+/aws
 
 # next.js
 /.next/

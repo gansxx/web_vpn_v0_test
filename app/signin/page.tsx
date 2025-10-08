@@ -230,6 +230,7 @@ export default function SignInPage() {
       const r = await fetch(`${API_BASE}/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "cf-turnstile-response": tsToken },
+        credentials: "include",
         body: JSON.stringify({ email: form.email, password: form.password }),
       })
       // 将后端返回的错误信息透出到界面

@@ -309,9 +309,7 @@ export default function SignInPage() {
             <span className="text-gray-900 text-2xl font-bold">Z加速</span>
           </div>
 
-          {/* <p className="text-gray-600 text-sm mb-2">
-            永久导航页 <span className="text-blue-600">[帕克加速.com]</span> 保存防丢
-          </p> */}
+          
         </div>
 
         {/* Sign In Form */}

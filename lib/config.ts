@@ -11,45 +11,23 @@ export const DEV_MODE_ENABLED = process.env.NEXT_PUBLIC_DEV_MODE_ENABLED === "tr
 // Check if running in development environment
 export const IS_DEVELOPMENT = process.env.NODE_ENV === "development";
 
-// Developer mode settings with environment variable priority
+// Static environment variable mapping - enables Next.js build-time replacement
+// Next.js can only replace static process.env accesses, not dynamic ones
+const ENV_SETTINGS = {
+  DISABLE_TURNSTILE: process.env.NEXT_PUBLIC_DISABLE_TURNSTILE === "true",
+  DISABLE_AUTH_MIDDLEWARE: process.env.NEXT_PUBLIC_DISABLE_AUTH_MIDDLEWARE === "true",
+} as const;
+
+// Developer mode settings using static mapping
 export function getDevModeSetting(key: string, envDefault?: string): boolean {
-  if (typeof window === "undefined") {
-    // Server-side: use environment variables only
-    return process.env[`NEXT_PUBLIC_${key}`] === "true" || envDefault === "true";
-  }
+  // Use static mapping instead of dynamic process.env access
+  const setting = ENV_SETTINGS[key as keyof typeof ENV_SETTINGS];
 
-  // Client-side: environment variables take priority over localStorage
-  const envValue = process.env[`NEXT_PUBLIC_${key}`];
-  if (envValue !== undefined) {
-    return envValue === "true";
-  }
-
-  // Fallback to localStorage if environment variable is not set
-  const localStorageKey = `dev_mode_${key.toLowerCase()}`;
-  const localValue = localStorage.getItem(localStorageKey);
-  if (localValue !== null) {
-    return localValue === "true";
+  if (setting !== undefined) {
+    return setting;
   }
 
   return envDefault === "true";
-}
-
-export function setDevModeSetting(key: string, value: boolean): void {
-  if (typeof window === "undefined") return;
-
-  const localStorageKey = `dev_mode_${key.toLowerCase()}`;
-  localStorage.setItem(localStorageKey, value.toString());
-}
-
-export function resetDevModeSettings(): void {
-  if (typeof window === "undefined") return;
-
-  const keys = [
-    "dev_mode_disable_turnstile",
-    "dev_mode_disable_auth_middleware"
-  ];
-
-  keys.forEach(key => localStorage.removeItem(key));
 }
 
 /**

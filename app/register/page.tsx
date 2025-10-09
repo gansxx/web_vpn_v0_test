@@ -90,11 +90,15 @@ export default function RegisterPage() {
   const onSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
 
-    if (!formData.email || !formData.verificationCode) {
-      setErrors({
-        email: !formData.email ? "请输入邮箱" : "",
-        verificationCode: !formData.verificationCode ? "请输入验证码" : "",
-      })
+    // 验证所有必填字段
+    const newErrors: { [key: string]: string } = {}
+    if (!formData.email) newErrors.email = "请输入邮箱"
+    if (!formData.verificationCode) newErrors.verificationCode = "请输入验证码"
+    if (!formData.password) newErrors.password = "请输入密码"
+    if (!formData.confirmPassword) newErrors.confirmPassword = "请确认密码"
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors)
       return
     }
 
@@ -113,7 +117,11 @@ export default function RegisterPage() {
           "Content-Type": "application/json",
           "cf-turnstile-response": tsToken,
         },
-        body: JSON.stringify({ email: formData.email, code: formData.verificationCode }),
+        body: JSON.stringify({
+          email: formData.email,
+          code: formData.verificationCode,
+          password: formData.password  // 添加密码字段
+        }),
         credentials: "include",
       })
 

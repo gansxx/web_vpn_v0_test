@@ -2,7 +2,8 @@
 
 import { useState, FormEvent, ChangeEvent } from "react"
 import { API_BASE } from "@/lib/config"
-import Turnstile from "@/components/Turnstile"
+/* TURNSTILE DISABLED - 已注释 Turnstile 导入 */
+// import Turnstile from "@/components/Turnstile"
 
 export default function RegisterPage() {
   // 使用 useState 钩子定义了一个名为 formData 的状态变量，用于存储用户输入的表单数据。
@@ -22,7 +23,8 @@ export default function RegisterPage() {
   const [countdown, setCountdown] = useState(0)
   const [sendingCode, setSendingCode] = useState(false)
   const [submitting, setSubmitting] = useState(false)
-  const [tsToken, setTsToken] = useState<string>("")
+  /* TURNSTILE DISABLED - 已注释 Turnstile token 状态 */
+  // const [tsToken, setTsToken] = useState<string>("")
 
   // 确认密码校验：不一致时给出用户可见的错误
   const validatePasswords = () => {
@@ -40,16 +42,18 @@ export default function RegisterPage() {
       setErrors({ email: "请先输入邮箱地址" })
       return
     }
-    if (!tsToken) {
-      setErrors({ email: "请先完成人机验证" })
-      return
-    }
+    /* TURNSTILE DISABLED - 已注释 Turnstile 验证检查 */
+    // if (!tsToken) {
+    //   setErrors({ email: "请先完成人机验证" })
+    //   return
+    // }
     setSubmitError("")
     setSendingCode(true)
     try {
+      /* TURNSTILE DISABLED - 移除 cf-turnstile-response header */
       const res = await fetch(`${API_BASE}/otp/send`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "cf-turnstile-response": tsToken },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: formData.email }),
         credentials: "include",
       })
@@ -97,16 +101,18 @@ export default function RegisterPage() {
 
     if (!validatePasswords()) return
 
-    if (!tsToken) {
-      setSubmitError("请先完成人机验证")
-      return
-    }
+    /* TURNSTILE DISABLED - 已注释 Turnstile 验证检查 */
+    // if (!tsToken) {
+    //   setSubmitError("请先完成人机验证")
+    //   return
+    // }
     setSubmitError("")
     setSubmitting(true)
     try {
+      /* TURNSTILE DISABLED - 移除 cf-turnstile-response header */
       const res = await fetch(`${API_BASE}/otp/verify`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "cf-turnstile-response": tsToken },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: formData.email, code: formData.verificationCode }),
         credentials: "include",
       })
@@ -172,11 +178,11 @@ export default function RegisterPage() {
           </div>
 
           <form className="space-y-6" onSubmit={onSubmit}>
-            {/* Turnstile Widget */}
-            <div>
+            {/* TURNSTILE DISABLED - 已注释 Turnstile Widget */}
+            {/* <div>
               <Turnstile onVerify={setTsToken} onExpire={() => setTsToken("")} onError={() => setTsToken("")} />
               {!tsToken && <p className="text-xs text-gray-500 mt-1">请通过人机验证后再操作</p>}
-            </div>
+            </div> */}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
                 电子邮件地址
@@ -212,12 +218,13 @@ export default function RegisterPage() {
                   className="flex-1 px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="请输入验证码"
                 />
+                {/* TURNSTILE DISABLED - 移除 !tsToken 禁用条件 */}
                 <button
                   type="button"
                   onClick={sendVerificationCode}
-                  disabled={countdown > 0 || sendingCode || !tsToken}
+                  disabled={countdown > 0 || sendingCode}
                   className={`px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
-                    countdown > 0 || sendingCode || !tsToken
+                    countdown > 0 || sendingCode
                       ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                       : "bg-blue-600 text-white hover:bg-blue-700"
                   }`}
@@ -353,9 +360,10 @@ export default function RegisterPage() {
               {submitError && (
                 <div className="text-sm text-red-600">{submitError}</div>
               )}
+              {/* TURNSTILE DISABLED - 移除 !tsToken 禁用条件 */}
               <button
                 type="submit"
-                disabled={submitting || !tsToken}
+                disabled={submitting}
                 className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
               >
                 {submitting ? "提交中..." : "立即注册"}

@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { PLANS } from "@/lib/plans"
@@ -8,6 +9,26 @@ export default function HomePage() {
   const scrollToSection = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" })
   }
+
+  // Debug: 在控制台输出应用版本和环境变量（支持 Vercel 等部署平台）
+  useEffect(() => {
+    if (typeof window === "undefined") return
+
+    const { APP_VERSION, getEnvDebugInfo } = require("@/lib/config")
+    const envInfo = getEnvDebugInfo()
+
+    console.group("🚀 Application Debug Info")
+    console.log(`📦 App Version: ${APP_VERSION}`)
+    console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`)
+    console.log(`🔗 Origin: ${window.location.origin}`)
+    console.groupEnd()
+
+    console.group("🔧 Environment Variables (Runtime)")
+    console.table(envInfo)
+    console.log("📝 Variables from runtime environment:", envInfo)
+    console.log("ℹ️ Note: Works in Vercel, local dev, and all deployment platforms")
+    console.groupEnd()
+  }, [])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-accent/10">

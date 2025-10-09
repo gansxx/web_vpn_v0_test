@@ -2,7 +2,8 @@
 
 import { useEffect, useState, FormEvent, ChangeEvent } from "react"
 import { API_BASE, DEV_MODE_ENABLED } from "@/lib/config"
-import Turnstile from "@/components/Turnstile"
+/* TURNSTILE DISABLED - 已注释 Turnstile 导入 */
+// import Turnstile from "@/components/Turnstile"
 // cookie获取逻辑
 function getCookie(name: string): string | null {
   if (typeof document === "undefined") return null
@@ -50,8 +51,8 @@ export default function SignInPage() {
   const [form, setForm] = useState({ email: "", password: "", remember: true })
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  // Turnstile token
-  const [tsToken, setTsToken] = useState<string>("")
+  /* TURNSTILE DISABLED - 已注释 Turnstile token 状态 */
+  // const [tsToken, setTsToken] = useState<string>("")
   // 字段级错误：用于展示「请输入邮箱/密码」等前端校验
   const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({})
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
@@ -220,16 +221,18 @@ export default function SignInPage() {
       })
       return
     }
-    if (!tsToken) {
-      setError("请先完成人机验证")
-      return
-    }
+    /* TURNSTILE DISABLED - 已注释 Turnstile 验证检查 */
+    // if (!tsToken) {
+    //   setError("请先完成人机验证")
+    //   return
+    // }
     setSubmitting(true)
     setError(null)
     try {
+      /* TURNSTILE DISABLED - 移除 cf-turnstile-response header */
       const r = await fetch(`${API_BASE}/login`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "cf-turnstile-response": tsToken },
+        headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({ email: form.email, password: form.password }),
       })
@@ -345,13 +348,13 @@ export default function SignInPage() {
               {fieldErrors.email && <p className="mt-1 text-sm text-red-600">{fieldErrors.email}</p>}
             </div>
 
-            {/* Turnstile Widget */}
-            <div>
+            {/* TURNSTILE DISABLED - 已注释 Turnstile Widget */}
+            {/* <div>
               <Turnstile onVerify={setTsToken} onExpire={() => setTsToken("")} onError={() => setTsToken("")} />
               {!tsToken && (
                 <p className="text-xs text-gray-500 mt-1">请通过人机验证后再提交</p>
               )}
-            </div>
+            </div> */}
 
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
@@ -416,9 +419,10 @@ export default function SignInPage() {
             {error && <p className="text-sm text-red-600">{error}</p>}
 
             <div className="space-y-3">
+              {/* TURNSTILE DISABLED - 移除 !tsToken 禁用条件 */}
               <button
                 type="submit"
-                disabled={submitting || !tsToken}
+                disabled={submitting}
                 className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
               >
                 {submitting ? "登录中..." : "登录"}
@@ -435,7 +439,8 @@ export default function SignInPage() {
         </div>
         {DEV_MODE_ENABLED && (
           <div className="mt-6 p-3 text-xs rounded bg-gray-50 border">
-            <div>Turnstile: {tsToken ? `${tsToken.slice(0, 8)}...` : "(未获取)"}</div>
+            {/* TURNSTILE DISABLED - 已注释 Turnstile 调试信息 */}
+            {/* <div>Turnstile: {tsToken ? `${tsToken.slice(0, 8)}...` : "(未获取)"}</div> */}
             <div>API_BASE: {dbg.apiBase}</div>
             <div>tokenLen: {dbg.tokenLen} {dbg.tokenLen ? "✅" : "❌"}</div>
             <div>url: {dbg.url || "(未发起)"}</div>

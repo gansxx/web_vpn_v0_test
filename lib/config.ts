@@ -11,22 +11,27 @@ export const DEV_MODE_ENABLED = process.env.NEXT_PUBLIC_DEV_MODE_ENABLED === "tr
 // Check if running in development environment
 export const IS_DEVELOPMENT = process.env.NODE_ENV === "development";
 
-// Developer mode settings with localStorage fallback
+// Developer mode settings with environment variable priority
 export function getDevModeSetting(key: string, envDefault?: string): boolean {
   if (typeof window === "undefined") {
     // Server-side: use environment variables only
     return process.env[`NEXT_PUBLIC_${key}`] === "true" || envDefault === "true";
   }
 
-  // Client-side: check localStorage first, then environment variables
+  // Client-side: environment variables take priority over localStorage
+  const envValue = process.env[`NEXT_PUBLIC_${key}`];
+  if (envValue !== undefined) {
+    return envValue === "true";
+  }
+
+  // Fallback to localStorage if environment variable is not set
   const localStorageKey = `dev_mode_${key.toLowerCase()}`;
   const localValue = localStorage.getItem(localStorageKey);
-
   if (localValue !== null) {
     return localValue === "true";
   }
 
-  return process.env[`NEXT_PUBLIC_${key}`] === "true" || envDefault === "true";
+  return envDefault === "true";
 }
 
 export function setDevModeSetting(key: string, value: boolean): void {

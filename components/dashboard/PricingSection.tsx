@@ -1,6 +1,13 @@
-import { useCallback, useState } from "react"
+import { useCallback, useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { PLANS } from "@/lib/plans"
 import { API_BASE } from "@/lib/config"
 
@@ -10,6 +17,96 @@ interface PricingSectionProps {
 
 export function PricingSection({ onPurchaseSuccess }: PricingSectionProps) {
   const [purchasingFreePlan, setPurchasingFreePlan] = useState(false)
+  const [showWaitingDialog, setShowWaitingDialog] = useState(false)
+  const [countdownSeconds, setCountdownSeconds] = useState(30)
+  const [purchasedPlanName, setPurchasedPlanName] = useState("")
+  const [pollingIntervalId, setPollingIntervalId] = useState<NodeJS.Timeout | null>(null)
+
+  const handleCloseWaitingDialog = useCallback(() => {
+    // 清理轮询定时器
+    if (pollingIntervalId) {
+      clearInterval(pollingIntervalId)
+      setPollingIntervalId(null)
+    }
+    setShowWaitingDialog(false)
+    setCountdownSeconds(30)
+    onPurchaseSuccess()
+  }, [onPurchaseSuccess, pollingIntervalId])
+
+  // 轮询机制：定期检查产品列表，查找新生成的订阅链接
+  const startPolling = useCallback(() => {
+    let pollCount = 0
+    const maxPolls = 15 // 最多轮询 15 次（30 秒）
+
+    const intervalId = setInterval(async () => {
+      pollCount++
+
+      try {
+        const response = await fetch(`${API_BASE}/user/products`, {
+          credentials: "include"
+        })
+
+        if (!response.ok) {
+          console.error("轮询产品列表失败:", response.status)
+          return
+        }
+
+        const products = await response.json()
+        const productsArray = Array.isArray(products) ? products : []
+
+        // 查找最新的产品（根据购买时间排序）
+        if (productsArray.length > 0) {
+          const latestProduct = productsArray.sort((a: any, b: any) => {
+            const dateA = a.buy_time ? new Date(a.buy_time).getTime() : 0
+            const dateB = b.buy_time ? new Date(b.buy_time).getTime() : 0
+            return dateB - dateA
+          })[0]
+
+          // 检查最新产品是否有订阅链接
+          if (latestProduct?.subscription_url) {
+            console.log("✅ 检测到订阅链接已生成，自动关闭等待提示")
+            clearInterval(intervalId)
+            setPollingIntervalId(null)
+            handleCloseWaitingDialog()
+            return
+          }
+        }
+
+        // 达到最大轮询次数，停止轮询
+        if (pollCount >= maxPolls) {
+          console.warn("⚠️ 轮询超时，停止轮询")
+          clearInterval(intervalId)
+          setPollingIntervalId(null)
+        }
+      } catch (error) {
+        console.error("轮询过程中发生错误:", error)
+      }
+    }, 2000) // 每 2 秒轮询一次
+
+    setPollingIntervalId(intervalId)
+  }, [handleCloseWaitingDialog])
+
+  // 倒计时和自动关闭效果
+  useEffect(() => {
+    if (showWaitingDialog && countdownSeconds > 0) {
+      const timer = setTimeout(() => {
+        setCountdownSeconds(countdownSeconds - 1)
+      }, 1000)
+      return () => clearTimeout(timer)
+    } else if (showWaitingDialog && countdownSeconds === 0) {
+      handleCloseWaitingDialog()
+    }
+  }, [showWaitingDialog, countdownSeconds, handleCloseWaitingDialog])
+
+  // 组件卸载时清理轮询定时器，防止内存泄漏
+  useEffect(() => {
+    return () => {
+      if (pollingIntervalId) {
+        console.log("🧹 组件卸载，清理轮询定时器")
+        clearInterval(pollingIntervalId)
+      }
+    }
+  }, [pollingIntervalId])
 
   const purchasePlan = useCallback(async (plan: any) => {
     setPurchasingFreePlan(true)
@@ -19,13 +116,13 @@ export function PricingSection({ onPurchaseSuccess }: PricingSectionProps) {
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "include",
         body: JSON.stringify({
           phone: "",
           plan_id: plan.id,
           plan_name: plan.name,
           duration_days: plan.id === "free" ? 30 : 365
-        }),
-        credentials: "include"
+        })
       })
 
       if (!purchaseResponse.ok) {
@@ -36,8 +133,20 @@ export function PricingSection({ onPurchaseSuccess }: PricingSectionProps) {
       const purchaseData = await purchaseResponse.json()
 
       if (purchaseData.success) {
-        alert(`${purchaseData.plan_name}获取成功！`)
-        onPurchaseSuccess()
+        // 智能响应处理：检测后端是否已返回订阅链接
+        if (purchaseData.subscription_url) {
+          // ✅ 后端已返回订阅链接，立即刷新产品列表
+          console.log("✅ 后端已返回订阅链接，立即刷新")
+          onPurchaseSuccess()
+          alert(`${purchaseData.plan_name || plan.name}获取成功！订阅链接已生成`)
+        } else {
+          // ⏱️ 后端未返回订阅链接（异常情况），显示等待 Dialog 并启动轮询
+          console.log("⏱️ 后端未返回订阅链接，启动轮询机制")
+          setPurchasedPlanName(purchaseData.plan_name || plan.name)
+          setShowWaitingDialog(true)
+          setCountdownSeconds(30)
+          startPolling()
+        }
       } else {
         alert(purchaseData.message || "购买失败")
       }
@@ -106,6 +215,54 @@ export function PricingSection({ onPurchaseSuccess }: PricingSectionProps) {
           )
         })}
       </div>
+
+      {/* 等待订阅链接生成的提示 Dialog */}
+      <Dialog open={showWaitingDialog} onOpenChange={setShowWaitingDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <svg className="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              购买成功！
+            </DialogTitle>
+            <DialogDescription className="space-y-4 pt-4">
+              <div className="text-center">
+                <p className="text-lg font-semibold text-gray-900 mb-2">
+                  {purchasedPlanName}
+                </p>
+                <div className="flex items-center justify-center gap-2 mb-4">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                </div>
+                <p className="text-gray-700 mb-2">
+                  订阅链接正在生成中，请稍候...
+                </p>
+                <p className="text-sm text-amber-600 font-medium mb-2">
+                  ⏱️ 预计需要 5-30 秒
+                </p>
+                <p className="text-sm text-red-600 font-bold">
+                  ⚠️ 请不要关闭此页面
+                </p>
+              </div>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-center">
+                <p className="text-sm text-blue-800">
+                  倒计时：<span className="font-bold text-lg">{countdownSeconds}</span> 秒
+                </p>
+                <p className="text-xs text-blue-600 mt-1">
+                  生成完成后将自动刷新套餐列表
+                </p>
+              </div>
+              <Button
+                onClick={handleCloseWaitingDialog}
+                className="w-full"
+                variant="outline"
+              >
+                我知道了，手动刷新
+              </Button>
+            </DialogDescription>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

@@ -36,23 +36,16 @@ export function setDevModeSetting(key: string, value: boolean): void {
   localStorage.setItem(localStorageKey, value.toString());
 }
 
-/* ========================================
- * TURNSTILE DISABLED - START
- * 已禁用 Cloudflare Turnstile 人机验证配置
- * 禁用原因：调试需要
- * 禁用日期：2025-10-09
- * ======================================== */
-// export function resetDevModeSettings(): void {
-//   if (typeof window === "undefined") return;
+export function resetDevModeSettings(): void {
+  if (typeof window === "undefined") return;
 
-//   const keys = [
-//     "dev_mode_disable_turnstile",
-//     "dev_mode_disable_auth_middleware"
-//   ];
+  const keys = [
+    "dev_mode_disable_turnstile",
+    "dev_mode_disable_auth_middleware"
+  ];
 
-//   keys.forEach(key => localStorage.removeItem(key));
-// }
-/* TURNSTILE DISABLED - END */
+  keys.forEach(key => localStorage.removeItem(key));
+}
 
 /**
  * 获取环境变量调试信息
@@ -64,8 +57,8 @@ export function getEnvDebugInfo() {
     // API Configuration
     NEXT_PUBLIC_API_BASE: process.env.NEXT_PUBLIC_API_BASE,
 
-    /* TURNSTILE DISABLED - 已注释 Turnstile 配置 */
-    // NEXT_PUBLIC_TURNSTILE_SITE_KEY: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY,
+    // Turnstile Configuration
+    NEXT_PUBLIC_TURNSTILE_SITE_KEY: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY,
 
     // Developer Mode Configuration
     NEXT_PUBLIC_DEV_MODE_ENABLED: process.env.NEXT_PUBLIC_DEV_MODE_ENABLED,

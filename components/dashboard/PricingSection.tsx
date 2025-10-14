@@ -137,6 +137,35 @@ export function PricingSection({ onPurchaseSuccess }: PricingSectionProps) {
         if (purchaseData.subscription_url) {
           // ✅ 后端已返回订阅链接，立即刷新产品列表
           console.log("✅ 后端已返回订阅链接，立即刷新")
+
+          // 🎯 Google Ads 转化追踪
+          if (typeof window !== 'undefined' && window.gtag) {
+            const googleAdsId = process.env.NEXT_PUBLIC_GOOGLE_ADS_ID
+            const conversionLabel = process.env.NEXT_PUBLIC_GOOGLE_ADS_CONVERSION_LABEL
+
+            if (googleAdsId && conversionLabel) {
+              // 生成唯一的交易ID，避免重复计数
+              const transactionId = `free-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+
+              // 🔍 可选：提取 gclid 用于调试 (gtag.js 会自动处理，这里仅用于日志)
+              const urlParams = new URLSearchParams(window.location.search)
+              const gclid = urlParams.get('gclid')
+
+              window.gtag('event', 'conversion', {
+                'send_to': `${googleAdsId}/${conversionLabel}`,
+                'value': 0.0,
+                'currency': 'CNY',
+                'transaction_id': transactionId
+              })
+
+              console.log("📊 Google Ads 转化事件已触发:", {
+                transactionId,
+                gclid: gclid || 'direct_traffic',
+                timestamp: new Date().toISOString()
+              })
+            }
+          }
+
           onPurchaseSuccess()
           alert(`${purchaseData.plan_name || plan.name}获取成功！订阅链接已生成`)
         } else {

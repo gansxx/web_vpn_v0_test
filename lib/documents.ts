@@ -26,6 +26,15 @@ export const documents: DocumentMeta[] = [
         filename: "subscription.md",
         icon: "🪟",
         lastUpdated: "2025-01-15"
+      },
+      {
+        id: "tutorial-android",
+        title: "Android客户端使用教程",
+        description: "详细的Android客户端下载、安装和配置指南，包含订阅链接获取和导入步骤",
+        category: "使用教程",
+        filename: "subscription_android.md",
+        icon: "📱",
+        lastUpdated: "2025-01-15"
       }
     ]
   },

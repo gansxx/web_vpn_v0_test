@@ -304,6 +304,16 @@ export default function HomePage() {
 
           <div className="grid md:grid-cols-4 gap-6 max-w-4xl mx-auto">
             <ClientDownloadCard
+              name="Android"
+              bgColor="bg-green-600"
+              icon={
+                <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M17.523 15.3414c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.5511 0 .9993.4482.9993.9993 0 .5511-.4482.9997-.9993.9997m-11.046 0c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.5511 0 .9993.4482.9993.9993 0 .5511-.4482.9997-.9993.9997m11.4045-6.02l1.9973-3.4592a.416.416 0 00-.1518-.5972.416.416 0 00-.5972.1518l-2.0223 3.503C15.5902 8.2439 13.8533 7.8508 12 7.8508s-3.5902.3931-5.1333 1.0989L4.8442 5.4467a.4161.4161 0 00-.5972-.1518.416.416 0 00-.1518.5972L6.0927 9.3214C2.8207 11.0806.9999 13.9222.9999 17.2623c0 .5511.4482.9993.9993.9993h19.0016c.5511 0 .9993-.4482.9993-.9993-.0001-3.3401-1.8209-6.1817-5.0929-7.9409z" />
+                </svg>
+              }
+            />
+
+            <ClientDownloadCard
               name="Windows"
               bgColor="bg-blue-500"
               icon={
@@ -315,11 +325,6 @@ export default function HomePage() {
 
             {/* 如需添加其他客户端，使用相同的 ClientDownloadCard 组件即可，自动包含登录跳转逻辑 */}
             {/* 示例：
-            <ClientDownloadCard
-              name="Android"
-              bgColor="bg-green-500"
-              icon={<svg>...</svg>}
-            />
             <ClientDownloadCard
               name="macOS"
               bgColor="bg-gray-800"

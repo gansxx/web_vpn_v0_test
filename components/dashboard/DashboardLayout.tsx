@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { DashboardSidebar } from "./DashboardSidebar"
 import { DashboardHeader } from "./DashboardHeader"
 import { DashboardOverview } from "./DashboardOverview"
@@ -14,6 +14,25 @@ export default function DashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [activeSection, setActiveSection] = useState("dashboard")
   const [showTicketForm, setShowTicketForm] = useState(false)
+
+  // Listen for navigation events from child components
+  useEffect(() => {
+    const handleNavigateToSection = (event: CustomEvent<string>) => {
+      const section = event.detail
+      setActiveSection(section)
+
+      // If navigating to tickets section, show the ticket form
+      if (section === 'tickets') {
+        setShowTicketForm(true)
+      }
+    }
+
+    window.addEventListener('navigate-to-section', handleNavigateToSection as EventListener)
+
+    return () => {
+      window.removeEventListener('navigate-to-section', handleNavigateToSection as EventListener)
+    }
+  }, [])
 
   const handlePurchaseSuccess = () => {
     // This will trigger re-fetching of products and orders

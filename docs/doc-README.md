@@ -7,11 +7,15 @@
 ### 开发记录
 - [`DEVELOPMENT.md`](./DEVELOPMENT.md) - 原始开发记录
 - [`refactoring-dashboard-2025-09-27.md`](./refactoring-dashboard-2025-09-27.md) - Dashboard 重构开发日记
+- [`fix-turnstile-nextjs-env-2025-10-09.md`](./fix-turnstile-nextjs-env-2025-10-09.md) - Turnstile 环境变量 Next.js 构建时替换问题修复
 
 ### 文档分类
 
 #### 🔧 重构记录
 - **Dashboard 重构** (2025-09-27) - 将932行单文件重构为15个模块化组件
+
+#### 🐛 Bug 修复记录
+- **Turnstile 环境变量问题** (2025-10-09) - 修复 Next.js 动态环境变量访问导致的构建时替换失败问题
 
 #### 📝 开发日记
 每个重要的开发任务都会有对应的开发日记，记录：

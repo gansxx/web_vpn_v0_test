@@ -2,6 +2,9 @@ import packageJson from '../package.json'
 
 export const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "https://selfgo.asia/api";
 
+// Stripe Configuration
+export const STRIPE_PUBLISHABLE_KEY = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? "";
+
 // Application Version (automatically synced from package.json)
 export const APP_VERSION = packageJson.version;
 

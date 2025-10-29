@@ -1,4 +1,5 @@
 import { useCallback, useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import {
@@ -8,19 +9,28 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { CreditCard, Loader2 } from "lucide-react"
 import { PLANS } from "@/lib/plans"
 import { API_BASE } from "@/lib/config"
+import { purchaseAdvancedPlan } from "@/lib/advanced-plan-api"
+import { purchaseUnlimitedPlan } from "@/lib/unlimited-plan-api"
 
 interface PricingSectionProps {
   onPurchaseSuccess: () => void
 }
 
 export function PricingSection({ onPurchaseSuccess }: PricingSectionProps) {
+  const router = useRouter()
   const [purchasingFreePlan, setPurchasingFreePlan] = useState(false)
   const [showWaitingDialog, setShowWaitingDialog] = useState(false)
   const [countdownSeconds, setCountdownSeconds] = useState(30)
   const [purchasedPlanName, setPurchasedPlanName] = useState("")
   const [pollingIntervalId, setPollingIntervalId] = useState<NodeJS.Timeout | null>(null)
+
+  // 支付方式选择相关状态
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false)
+  const [purchasing, setPurchasing] = useState(false)
+  const [selectedPlanId, setSelectedPlanId] = useState<string>("")
 
   const handleCloseWaitingDialog = useCallback(() => {
     // 清理轮询定时器
@@ -86,6 +96,69 @@ export function PricingSection({ onPurchaseSuccess }: PricingSectionProps) {
     setPollingIntervalId(intervalId)
   }, [handleCloseWaitingDialog])
 
+  // 处理高级套餐支付
+  const handlePremiumPurchase = useCallback(async () => {
+    setPurchasing(true)
+    try {
+      const result = await purchaseAdvancedPlan({
+        plan_name: "Z加速-高级套餐",
+        plan_id:"advanced",
+        payment_method: "stripe",
+        phone: ""
+      })
+
+      if (result.success && result.payment_data?.checkout_url) {
+        // 跳转到 Stripe Checkout 页面
+        window.location.href = result.payment_data.checkout_url
+      } else {
+        alert(result.message || "创建支付会话失败")
+        setPurchasing(false)
+        setShowPaymentDialog(false)
+      }
+    } catch (error: any) {
+      console.error("购买高级套餐失败:", error)
+      alert(error?.message || "购买失败，请重试")
+      setPurchasing(false)
+      setShowPaymentDialog(false)
+    }
+  }, [])
+
+  // 处理无限流量套餐支付
+  const handleEnterprisePurchase = useCallback(async () => {
+    setPurchasing(true)
+    try {
+      const result = await purchaseUnlimitedPlan({
+        plan_name: "Z加速-无限流量套餐",
+        plan_id: "enterprise",
+        payment_method: "stripe",
+        phone: ""
+      })
+
+      if (result.success && result.payment_data?.checkout_url) {
+        // 跳转到 Stripe Checkout 页面
+        window.location.href = result.payment_data.checkout_url
+      } else {
+        alert(result.message || "创建支付会话失败")
+        setPurchasing(false)
+        setShowPaymentDialog(false)
+      }
+    } catch (error: any) {
+      console.error("购买无限流量套餐失败:", error)
+      alert(error?.message || "购买失败，请重试")
+      setPurchasing(false)
+      setShowPaymentDialog(false)
+    }
+  }, [])
+
+  // 统一支付处理函数（根据套餐类型调用对应的购买函数）
+  const handlePayment = useCallback(async () => {
+    if (selectedPlanId === "premium") {
+      await handlePremiumPurchase()
+    } else if (selectedPlanId === "enterprise") {
+      await handleEnterprisePurchase()
+    }
+  }, [selectedPlanId, handlePremiumPurchase, handleEnterprisePurchase])
+
   // 倒计时和自动关闭效果
   useEffect(() => {
     if (showWaitingDialog && countdownSeconds > 0) {
@@ -109,6 +182,21 @@ export function PricingSection({ onPurchaseSuccess }: PricingSectionProps) {
   }, [pollingIntervalId])
 
   const purchasePlan = useCallback(async (plan: any) => {
+    // 高级套餐（premium）：显示支付方式选择弹窗
+    if (plan.id === "premium") {
+      setSelectedPlanId(plan.id)
+      setShowPaymentDialog(true)
+      return
+    }
+
+    // 无限流量套餐（enterprise）：显示支付方式选择弹窗
+    if (plan.id === "enterprise") {
+      setSelectedPlanId(plan.id)
+      setShowPaymentDialog(true)
+      return
+    }
+
+    // 免费套餐：保持原有逻辑
     setPurchasingFreePlan(true)
     try {
       const purchaseResponse = await fetch(`${API_BASE}/user/free-plan/purchase`, {
@@ -185,7 +273,7 @@ export function PricingSection({ onPurchaseSuccess }: PricingSectionProps) {
     } finally {
       setPurchasingFreePlan(false)
     }
-  }, [onPurchaseSuccess])
+  }, [onPurchaseSuccess, router])
 
   return (
     <div className="space-y-6">
@@ -244,6 +332,43 @@ export function PricingSection({ onPurchaseSuccess }: PricingSectionProps) {
           )
         })}
       </div>
+
+      {/* 支付方式选择 Dialog */}
+      <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>选择支付方式</DialogTitle>
+            <DialogDescription>
+              请选择您的支付方式完成购买
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 pt-4">
+            <Button
+              onClick={handlePayment}
+              disabled={purchasing}
+              className="w-full h-auto py-4 px-6 flex items-center justify-between hover:bg-blue-600 transition-colors"
+              variant="default"
+            >
+              <div className="flex items-center gap-3">
+                <CreditCard className="h-6 w-6" />
+                <div className="text-left">
+                  <div className="font-semibold">Stripe 支付</div>
+                  <div className="text-xs text-blue-100 opacity-90">
+                    支持银行卡(国内/国外均支持) / Google Pay / Apple Pay
+                  </div>
+                </div>
+              </div>
+              {purchasing ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* 等待订阅链接生成的提示 Dialog */}
       <Dialog open={showWaitingDialog} onOpenChange={setShowWaitingDialog}>

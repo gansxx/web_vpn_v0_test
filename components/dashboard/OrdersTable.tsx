@@ -64,7 +64,7 @@ export function OrdersTable({ orders, loading, error, onReload }: OrdersTablePro
                 {!loading && !error && orders.length > 0 && (
                   <>
                     {orders.map((order) => {
-                      const amountDisplay = formatAmount(order.amount)
+                      const amountDisplay = formatAmount(order.amount/100)
                       const st = order.status || "—"
                       const badgeClass = getOrderStatusBadgeClass(st)
                       return (

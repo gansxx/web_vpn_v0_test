@@ -1,15 +1,144 @@
+'use client'
+
 import { useProducts } from "@/hooks/useProducts"
 import { useSubscriptionLink } from "@/hooks/useSubscriptionLink"
 import { copyToClipboard, showToast } from "@/lib/markdown-utils"
+import { useState, useEffect, useRef } from "react"
 
 interface FloatingButtonsProps {
   onOrderClick: () => void
   onTicketClick: () => void
 }
 
+interface Position {
+  x: number
+  y: number
+}
+
 export function FloatingButtons({ onOrderClick, onTicketClick }: FloatingButtonsProps) {
   const { products, loading: productsLoading } = useProducts()
   const { getSubscriptionLink, loading: linkLoading } = useSubscriptionLink()
+
+  // State for dragging and position
+  const [position, setPosition] = useState<Position>({ x: 0, y: 0 })
+  const [isDragging, setIsDragging] = useState(false)
+  const [isVisible, setIsVisible] = useState(true)
+  const [dragOffset, setDragOffset] = useState<Position>({ x: 0, y: 0 })
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  // Load saved position and visibility from localStorage
+  useEffect(() => {
+    const savedPosition = localStorage.getItem('floatingButtonsPosition')
+    const savedVisibility = localStorage.getItem('floatingButtonsVisible')
+
+    if (savedPosition) {
+      try {
+        setPosition(JSON.parse(savedPosition))
+      } catch (e) {
+        // Ignore invalid JSON
+      }
+    }
+
+    if (savedVisibility !== null) {
+      setIsVisible(savedVisibility === 'true')
+    }
+  }, [])
+
+  // Handle drag start (both mouse and touch)
+  const handleDragStart = (clientX: number, clientY: number) => {
+    if (!containerRef.current) return
+
+    const rect = containerRef.current.getBoundingClientRect()
+    setDragOffset({
+      x: clientX - rect.left,
+      y: clientY - rect.top
+    })
+    setIsDragging(true)
+  }
+
+  // Handle drag move
+  const handleDragMove = (clientX: number, clientY: number) => {
+    if (!isDragging) return
+
+    const newX = clientX - dragOffset.x
+    const newY = clientY - dragOffset.y
+
+    // Constrain to viewport
+    const maxX = window.innerWidth - (containerRef.current?.offsetWidth || 0)
+    const maxY = window.innerHeight - (containerRef.current?.offsetHeight || 0)
+
+    const constrainedX = Math.max(0, Math.min(newX, maxX))
+    const constrainedY = Math.max(0, Math.min(newY, maxY))
+
+    setPosition({ x: constrainedX, y: constrainedY })
+  }
+
+  // Handle drag end
+  const handleDragEnd = () => {
+    if (isDragging) {
+      setIsDragging(false)
+      // Save position to localStorage
+      localStorage.setItem('floatingButtonsPosition', JSON.stringify(position))
+    }
+  }
+
+  // Mouse event handlers
+  const handleMouseDown = (e: React.MouseEvent) => {
+    // Only start drag on the container, not on buttons
+    if ((e.target as HTMLElement).closest('button')) return
+    handleDragStart(e.clientX, e.clientY)
+  }
+
+  const handleMouseMove = (e: MouseEvent) => {
+    handleDragMove(e.clientX, e.clientY)
+  }
+
+  const handleMouseUp = () => {
+    handleDragEnd()
+  }
+
+  // Touch event handlers
+  const handleTouchStart = (e: React.TouchEvent) => {
+    // Only start drag on the container, not on buttons
+    if ((e.target as HTMLElement).closest('button')) return
+    const touch = e.touches[0]
+    handleDragStart(touch.clientX, touch.clientY)
+  }
+
+  const handleTouchMove = (e: TouchEvent) => {
+    if (!isDragging) return
+    e.preventDefault() // Prevent scrolling while dragging
+    const touch = e.touches[0]
+    handleDragMove(touch.clientX, touch.clientY)
+  }
+
+  const handleTouchEnd = () => {
+    handleDragEnd()
+  }
+
+  // Add/remove global event listeners
+  useEffect(() => {
+    if (isDragging) {
+      window.addEventListener('mousemove', handleMouseMove)
+      window.addEventListener('mouseup', handleMouseUp)
+      window.addEventListener('touchmove', handleTouchMove, { passive: false })
+      window.addEventListener('touchend', handleTouchEnd)
+    }
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove)
+      window.removeEventListener('mouseup', handleMouseUp)
+      window.removeEventListener('touchmove', handleTouchMove)
+      window.removeEventListener('touchend', handleTouchEnd)
+    }
+  }, [isDragging, dragOffset, position])
+
+  // Handle close
+  const handleClose = () => {
+    setIsVisible(false)
+    localStorage.setItem('floatingButtonsVisible', 'false')
+    showToast('悬浮按钮已隐藏，刷新页面可恢复', 'success')
+  }
 
   // Intelligent subscription handler
   const handleSmartSubscription = async () => {
@@ -57,8 +186,40 @@ export function FloatingButtons({ onOrderClick, onTicketClick }: FloatingButtons
 
   const isLoading = productsLoading || linkLoading
 
+  if (!isVisible) {
+    return null
+  }
+
+  const style = position.x || position.y
+    ? { left: `${position.x}px`, top: `${position.y}px` }
+    : { bottom: '24px', right: '24px' }
+
   return (
-    <div className="fixed bottom-6 right-6 flex flex-col gap-3">
+    <div
+      ref={containerRef}
+      className={`fixed z-50 flex flex-col gap-3 ${isDragging ? 'cursor-grabbing' : 'cursor-grab'} select-none`}
+      style={style}
+      onMouseDown={handleMouseDown}
+      onTouchStart={handleTouchStart}
+    >
+      {/* Close button */}
+      <button
+        onClick={handleClose}
+        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 transition-colors shadow-md z-10"
+        title="隐藏悬浮按钮"
+      >
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+
+      {/* Drag handle indicator */}
+      <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 flex gap-1 opacity-50">
+        <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
+        <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
+        <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
+      </div>
+
       <button
         onClick={handleSmartSubscription}
         disabled={isLoading}
@@ -67,7 +228,7 @@ export function FloatingButtons({ onOrderClick, onTicketClick }: FloatingButtons
         }`}
         title="智能一键订阅"
       >
-{isLoading ? (
+        {isLoading ? (
           <svg className="animate-spin w-6 h-6" fill="none" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>

@@ -99,6 +99,33 @@ export default function HomePage() {
                 了解更多
               </Button>
             </div>
+
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-8">
+              <a
+                href="https://play.google.com/store/apps/details?id=app.hiddify.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="transition-transform hover:scale-105"
+              >
+                <img
+                  src="https://play.google.com/intl/en_us/badges/static/images/badges/zh-cn_badge_web_generic.png"
+                  alt="Google Play 立即下载"
+                  className="h-14"
+                />
+              </a>
+              <a
+                href="https://apps.apple.com/us/app/hiddify-proxy-vpn/id6596777532"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="transition-transform hover:scale-105"
+              >
+                <img
+                  src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/zh-cn?size=250x83&amp;releaseDate=1712188800"
+                  alt="App Store 立即下载"
+                  className="h-14"
+                />
+              </a>
+            </div>
           </div>
         </div>
       </section>

@@ -4,6 +4,7 @@ import { useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { ClientDownloadCard } from "@/components/ClientDownloadCard"
+import { AppStoreCard } from "@/components/AppStoreCard"
 import { PLANS } from "@/lib/plans"
 
 export default function HomePage() {
@@ -346,6 +347,28 @@ export default function HomePage() {
               icon={
                 <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-13.051-1.351" />
+                </svg>
+              }
+            />
+
+            <AppStoreCard
+              name="Google Play"
+              bgColor="bg-green-600"
+              href="https://play.google.com/store/apps/details?id=app.hiddify.com"
+              icon={
+                <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M1.545 0L13.69 12.303l-3.111 3.11L1.545 0zm0 24l9.034-9.034 3.111 3.111L1.545 24zM24 12l-3.87-2.208L15.414 12l4.717 2.208L24 12zm-10.794 3.103L.925 24h.002L13.206 11.722l-3.11 3.111 3.11 3.27zM.925 0L13.206 12.278l3.11-3.111L.925 0z"/>
+                </svg>
+              }
+            />
+
+            <AppStoreCard
+              name="App Store"
+              bgColor="bg-gray-800"
+              href="https://apps.apple.com/us/app/hiddify-proxy-vpn/id6596777532"
+              icon={
+                <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
                 </svg>
               }
             />

@@ -23,7 +23,7 @@ export function PricingSection({ onPurchaseSuccess }: PricingSectionProps) {
   const router = useRouter()
   const [purchasingFreePlan, setPurchasingFreePlan] = useState(false)
   const [showWaitingDialog, setShowWaitingDialog] = useState(false)
-  const [countdownSeconds, setCountdownSeconds] = useState(30)
+  const [countdownSeconds, setCountdownSeconds] = useState(50)
   const [purchasedPlanName, setPurchasedPlanName] = useState("")
   const [pollingIntervalId, setPollingIntervalId] = useState<NodeJS.Timeout | null>(null)
 
@@ -39,14 +39,14 @@ export function PricingSection({ onPurchaseSuccess }: PricingSectionProps) {
       setPollingIntervalId(null)
     }
     setShowWaitingDialog(false)
-    setCountdownSeconds(30)
+    setCountdownSeconds(50)
     onPurchaseSuccess()
   }, [onPurchaseSuccess, pollingIntervalId])
 
   // 轮询机制：定期检查产品列表，查找新生成的订阅链接
   const startPolling = useCallback(() => {
     let pollCount = 0
-    const maxPolls = 15 // 最多轮询 15 次（30 秒）
+    const maxPolls = 10 // 最多轮询 10 次（50 秒）
 
     const intervalId = setInterval(async () => {
       pollCount++
@@ -91,7 +91,7 @@ export function PricingSection({ onPurchaseSuccess }: PricingSectionProps) {
       } catch (error) {
         console.error("轮询过程中发生错误:", error)
       }
-    }, 2000) // 每 2 秒轮询一次
+    }, 5000) // 每 5 秒轮询一次
 
     setPollingIntervalId(intervalId)
   }, [handleCloseWaitingDialog])
@@ -261,7 +261,7 @@ export function PricingSection({ onPurchaseSuccess }: PricingSectionProps) {
           console.log("⏱️ 后端未返回订阅链接，启动轮询机制")
           setPurchasedPlanName(purchaseData.plan_name || plan.name)
           setShowWaitingDialog(true)
-          setCountdownSeconds(30)
+          setCountdownSeconds(50)
           startPolling()
         }
       } else {

@@ -113,7 +113,7 @@ export default function DashboardLayout() {
       } catch (error) {
         console.error("轮询订单状态失败:", error)
       }
-    }, 2000) // 每 2 秒轮询一次
+    }, 3000) // 每 3 秒轮询一次
 
     return () => clearInterval(pollInterval)
   }, [pollingOrderId, showPollingDialog])

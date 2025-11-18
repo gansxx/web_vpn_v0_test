@@ -1,4 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 
 interface AppStoreCardProps {
   name: string
@@ -11,7 +12,8 @@ export function AppStoreCard({
   name,
   icon,
   bgColor,
-  href
+  href,
+  
 }: AppStoreCardProps) {
   return (
     <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
@@ -26,9 +28,14 @@ export function AppStoreCard({
             {icon}
           </div>
           <h3 className="font-semibold text-foreground mb-2">{name}</h3>
-          <span className="text-sm text-muted-foreground hover:text-primary transition-colors">
-            前往下载
-          </span>
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full bg-transparent"
+              asChild
+            >
+            <a href="/signin">下载</a>
+          </Button>
         </a>
       </CardContent>
     </Card>

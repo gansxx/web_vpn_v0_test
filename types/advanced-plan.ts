@@ -5,6 +5,7 @@
 // 高级套餐购买请求
 export interface AdvancedPlanPurchaseRequest {
   phone?: string
+  plan_id:string
   plan_name: string
   payment_method: string // "stripe" 或 "h5zhifu"
   pay_type?: string // h5zhifu专用：alipay 或 wechat

@@ -109,9 +109,9 @@ export default function HomePage() {
                 className="transition-transform hover:scale-105"
               >
                 <img
-                  src="https://play.google.com/intl/en_us/badges/static/images/badges/zh-cn_badge_web_generic.png"
+                  src="google_play.png"
                   alt="Google Play 立即下载"
-                  className="h-[60px] w-auto"
+                  className="h-[75px] w-auto"
                 />
               </a>
               <a
@@ -121,7 +121,7 @@ export default function HomePage() {
                 className="transition-transform hover:scale-105"
               >
                 <img
-                  src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/zh-cn?size=250x83&releaseDate=1712188800"
+                  src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/zh-cn?size=200x63&releaseDate=1712188800"
                   alt="App Store 立即下载"
                   className="h-[60px] w-auto"
                 />
@@ -353,13 +353,19 @@ export default function HomePage() {
 
             <AppStoreCard
               name="Google Play"
-              bgColor="bg-green-600"
+              bgColor="bg-white-500"
               href="https://play.google.com/store/apps/details?id=app.hiddify.com"
               icon={
-                <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M1.545 0L13.69 12.303l-3.111 3.11L1.545 0zm0 24l9.034-9.034 3.111 3.111L1.545 24zM24 12l-3.87-2.208L15.414 12l4.717 2.208L24 12zm-10.794 3.103L.925 24h.002L13.206 11.722l-3.11 3.111 3.11 3.27zM.925 0L13.206 12.278l3.11-3.111L.925 0z"/>
+                <svg width="40" height="40" viewBox="0 0 28.99 31.99" xmlns="http://www.w3.org/2000/svg">
+                  <g data-name="Capa 2">
+                    <g data-name="Capa 1"><path d="M13.54 15.28.12 29.34a3.66 3.66 0 0 0 5.33 2.16l15.1-8.6Z" style={{ fill: '#34a853' }}/>
+                      <path d="m27.11 12.89-6.53-3.74-7.35 6.45 7.38 7.28 6.48-3.7a3.54 3.54 0 0 0 1.5-4.79 3.62 3.62 0 0 0-1.5-1.5z" style={{ fill:'#fbbc04'}}/>
+                      <path d="M.12 2.66a3.57 3.57 0 0 0-.12.92v24.84a3.57 3.57 0 0 0 .12.92L14 15.64Z" style={{fill:'#4285f4'}}/>
+                      <path d="m13.64 16 6.94-6.85L5.5.51A3.73 3.73 0 0 0 3.63 0 3.64 3.64 0 0 0 .12 2.65Z" style={{fill:"#34a853"}}/>
+                    </g>
+                  </g>
                 </svg>
-              }
+                  }
             />
 
             <AppStoreCard

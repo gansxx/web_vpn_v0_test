@@ -155,7 +155,7 @@ export function ClientDownloads() {
               <path d="M17.523 15.3414c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.5511 0 .9993.4482.9993.9993 0 .5511-.4482.9997-.9993.9997m-11.046 0c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.5511 0 .9993.4482.9993.9993 0 .5511-.4482.9997-.9993.9997m11.4045-6.02l1.9973-3.4592a.416.416 0 00-.1518-.5972.416.416 0 00-.5972.1518l-2.0223 3.503C15.5902 8.2439 13.8533 7.8508 12 7.8508s-3.5902.3931-5.1333 1.0989L4.8442 5.4467a.4161.4161 0 00-.5972-.1518.416.416 0 00-.1518.5972L6.0927 9.3214C2.8207 11.0806.9999 13.9222.9999 17.2623c0 .5511.4482.9993.9993.9993h19.0016c.5511 0 .9993-.4482.9993-.9993-.0001-3.3401-1.8209-6.1817-5.0929-7.9409z" />
             </svg>
             <div className="flex flex-col">
-              <span className="text-gray-900">Android客户端</span>
+              <span className="text-gray-900">Android客户端(APK)</span>
               {androidFileSize && (
                 <span className="text-xs text-gray-500">{formatFileSize(androidFileSize)}</span>
               )}
@@ -229,9 +229,15 @@ export function ClientDownloads() {
         {/* Google Play 客户端 */}
         <div className="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200">
           <div className="flex items-center space-x-3">
-            <svg className="w-5 h-5 text-green-600" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M1.545 0L13.69 12.303l-3.111 3.11L1.545 0zm0 24l9.034-9.034 3.111 3.111L1.545 24zM24 12l-3.87-2.208L15.414 12l4.717 2.208L24 12zm-10.794 3.103L.925 24h.002L13.206 11.722l-3.11 3.111 3.11 3.27zM.925 0L13.206 12.278l3.11-3.111L.925 0z"/>
-            </svg>
+            <svg width="20" height="20" viewBox="0 0 28.99 31.99" xmlns="http://www.w3.org/2000/svg">
+                  <g data-name="Capa 2">
+                    <g data-name="Capa 1"><path d="M13.54 15.28.12 29.34a3.66 3.66 0 0 0 5.33 2.16l15.1-8.6Z" style={{ fill: '#34a853' }}/>
+                      <path d="m27.11 12.89-6.53-3.74-7.35 6.45 7.38 7.28 6.48-3.7a3.54 3.54 0 0 0 1.5-4.79 3.62 3.62 0 0 0-1.5-1.5z" style={{ fill:'#fbbc04'}}/>
+                      <path d="M.12 2.66a3.57 3.57 0 0 0-.12.92v24.84a3.57 3.57 0 0 0 .12.92L14 15.64Z" style={{fill:'#4285f4'}}/>
+                      <path d="m13.64 16 6.94-6.85L5.5.51A3.73 3.73 0 0 0 3.63 0 3.64 3.64 0 0 0 .12 2.65Z" style={{fill:"#34a853"}}/>
+                    </g>
+                  </g>
+                </svg>
             <div className="flex flex-col">
               <span className="text-gray-900">Google Play</span>
               <span className="text-xs text-gray-500">官方应用商店</span>

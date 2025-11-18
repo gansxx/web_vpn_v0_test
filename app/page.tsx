@@ -111,7 +111,7 @@ export default function HomePage() {
                 <img
                   src="https://play.google.com/intl/en_us/badges/static/images/badges/zh-cn_badge_web_generic.png"
                   alt="Google Play 立即下载"
-                  className="h-14"
+                  className="h-[60px] w-auto"
                 />
               </a>
               <a
@@ -121,9 +121,9 @@ export default function HomePage() {
                 className="transition-transform hover:scale-105"
               >
                 <img
-                  src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/zh-cn?size=250x83&amp;releaseDate=1712188800"
+                  src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/zh-cn?size=250x83&releaseDate=1712188800"
                   alt="App Store 立即下载"
-                  className="h-14"
+                  className="h-[60px] w-auto"
                 />
               </a>
             </div>

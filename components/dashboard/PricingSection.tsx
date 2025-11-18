@@ -14,6 +14,7 @@ import { PLANS } from "@/lib/plans"
 import { API_BASE } from "@/lib/config"
 import { purchaseAdvancedPlan } from "@/lib/advanced-plan-api"
 import { purchaseUnlimitedPlan } from "@/lib/unlimited-plan-api"
+import { getOrderProductStatus } from "@/lib/free-plan-api"
 
 interface PricingSectionProps {
   onPurchaseSuccess: () => void
@@ -25,7 +26,7 @@ export function PricingSection({ onPurchaseSuccess }: PricingSectionProps) {
   const [showWaitingDialog, setShowWaitingDialog] = useState(false)
   const [countdownSeconds, setCountdownSeconds] = useState(50)
   const [purchasedPlanName, setPurchasedPlanName] = useState("")
-  const [pollingIntervalId, setPollingIntervalId] = useState<NodeJS.Timeout | null>(null)
+  const [pollingOrderId, setPollingOrderId] = useState<string | null>(null)
 
   // 支付方式选择相关状态
   const [showPaymentDialog, setShowPaymentDialog] = useState(false)
@@ -33,68 +34,11 @@ export function PricingSection({ onPurchaseSuccess }: PricingSectionProps) {
   const [selectedPlanId, setSelectedPlanId] = useState<string>("")
 
   const handleCloseWaitingDialog = useCallback(() => {
-    // 清理轮询定时器
-    if (pollingIntervalId) {
-      clearInterval(pollingIntervalId)
-      setPollingIntervalId(null)
-    }
     setShowWaitingDialog(false)
     setCountdownSeconds(50)
+    setPollingOrderId(null)
     onPurchaseSuccess()
-  }, [onPurchaseSuccess, pollingIntervalId])
-
-  // 轮询机制：定期检查产品列表，查找新生成的订阅链接
-  const startPolling = useCallback(() => {
-    let pollCount = 0
-    const maxPolls = 10 // 最多轮询 10 次（50 秒）
-
-    const intervalId = setInterval(async () => {
-      pollCount++
-
-      try {
-        const response = await fetch(`${API_BASE}/user/products`, {
-          credentials: "include"
-        })
-
-        if (!response.ok) {
-          console.error("轮询产品列表失败:", response.status)
-          return
-        }
-
-        const products = await response.json()
-        const productsArray = Array.isArray(products) ? products : []
-
-        // 查找最新的产品（根据购买时间排序）
-        if (productsArray.length > 0) {
-          const latestProduct = productsArray.sort((a: any, b: any) => {
-            const dateA = a.buy_time ? new Date(a.buy_time).getTime() : 0
-            const dateB = b.buy_time ? new Date(b.buy_time).getTime() : 0
-            return dateB - dateA
-          })[0]
-
-          // 检查最新产品是否有订阅链接
-          if (latestProduct?.subscription_url) {
-            console.log("✅ 检测到订阅链接已生成，自动关闭等待提示")
-            clearInterval(intervalId)
-            setPollingIntervalId(null)
-            handleCloseWaitingDialog()
-            return
-          }
-        }
-
-        // 达到最大轮询次数，停止轮询
-        if (pollCount >= maxPolls) {
-          console.warn("⚠️ 轮询超时，停止轮询")
-          clearInterval(intervalId)
-          setPollingIntervalId(null)
-        }
-      } catch (error) {
-        console.error("轮询过程中发生错误:", error)
-      }
-    }, 5000) // 每 5 秒轮询一次
-
-    setPollingIntervalId(intervalId)
-  }, [handleCloseWaitingDialog])
+  }, [onPurchaseSuccess])
 
   // 处理高级套餐支付
   const handlePremiumPurchase = useCallback(async () => {
@@ -167,19 +111,68 @@ export function PricingSection({ onPurchaseSuccess }: PricingSectionProps) {
       }, 1000)
       return () => clearTimeout(timer)
     } else if (showWaitingDialog && countdownSeconds === 0) {
+      // 倒计时结束但产品可能仍未生成，提示用户超时
+      if (pollingOrderId) {
+        alert(
+          `⏱️ 订阅链接生成超时\n\n` +
+          `后端生成产品的时间超过预期。\n\n` +
+          `建议操作：\n` +
+          `1. 点击"立即刷新"手动刷新产品列表\n` +
+          `2. 如仍未显示，请稍后再次刷新页面\n` +
+          `3. 您的购买已成功，产品将在生成后自动显示`
+        )
+      }
       handleCloseWaitingDialog()
     }
-  }, [showWaitingDialog, countdownSeconds, handleCloseWaitingDialog])
+  }, [showWaitingDialog, countdownSeconds, pollingOrderId, handleCloseWaitingDialog])
 
-  // 组件卸载时清理轮询定时器，防止内存泄漏
+  // 轮询订单产品生成状态（基于 order_id）
   useEffect(() => {
-    return () => {
-      if (pollingIntervalId) {
-        console.log("🧹 组件卸载，清理轮询定时器")
-        clearInterval(pollingIntervalId)
+    if (!pollingOrderId || !showWaitingDialog) return
+
+    const pollInterval = setInterval(async () => {
+      try {
+        const statusData = await getOrderProductStatus(pollingOrderId)
+
+        if (statusData.is_completed) {
+          console.log("✅ 订阅链接已生成")
+          clearInterval(pollInterval)
+
+          // 提示用户订阅链接生成成功
+          alert(
+            `🎉 订阅链接生成成功！\n\n` +
+            `您的订阅链接已成功生成，产品列表即将自动刷新。\n\n` +
+            `您可以在"我的产品"中查看和使用订阅链接。`
+          )
+
+          handleCloseWaitingDialog()
+        } else if (statusData.is_failed) {
+          console.error("❌ 订阅链接生成失败")
+          clearInterval(pollInterval)
+
+          // 增强错误提示，明确告知后端生成产品失败
+          const errorMessage = statusData.message || "未知错误"
+          alert(
+            `❌ 后端生成产品失败\n\n` +
+            `错误详情：${errorMessage}\n\n` +
+            `解决方案：\n` +
+            `1. 请刷新页面重试\n` +
+            `2. 如问题持续，请联系客服并提供订单号：${pollingOrderId}\n` +
+            `3. 您的购买已成功，不会重复扣费`
+          )
+
+          setShowWaitingDialog(false)
+          setPollingOrderId(null)
+        } else {
+          console.log("⏱️ 订阅链接生成中...", statusData.message)
+        }
+      } catch (error) {
+        console.error("轮询订单状态失败:", error)
       }
-    }
-  }, [pollingIntervalId])
+    }, 3000) // 每 3 秒轮询一次
+
+    return () => clearInterval(pollInterval)
+  }, [pollingOrderId, showWaitingDialog, handleCloseWaitingDialog])
 
   const purchasePlan = useCallback(async (plan: any) => {
     // 高级套餐（premium）：显示支付方式选择弹窗
@@ -221,48 +214,56 @@ export function PricingSection({ onPurchaseSuccess }: PricingSectionProps) {
       const purchaseData = await purchaseResponse.json()
 
       if (purchaseData.success) {
+        // 🎯 Google Ads 转化追踪（无论是否立即返回订阅链接都触发）
+        if (typeof window !== 'undefined' && window.gtag) {
+          const googleAdsId = process.env.NEXT_PUBLIC_GOOGLE_ADS_ID
+          const conversionLabel = process.env.NEXT_PUBLIC_GOOGLE_ADS_CONVERSION_LABEL
+
+          if (googleAdsId && conversionLabel) {
+            // 生成唯一的交易ID，避免重复计数
+            const transactionId = `free-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`
+
+            // 🔍 可选：提取 gclid 用于调试 (gtag.js 会自动处理，这里仅用于日志)
+            const urlParams = new URLSearchParams(window.location.search)
+            const gclid = urlParams.get('gclid')
+
+            window.gtag('event', 'conversion', {
+              'send_to': `${googleAdsId}/${conversionLabel}`,
+              'value': 0.0,
+              'currency': 'CNY',
+              'transaction_id': transactionId
+            })
+
+            console.log("📊 Google Ads 转化事件已触发:", {
+              transactionId,
+              gclid: gclid || 'direct_traffic',
+              timestamp: new Date().toISOString()
+            })
+          }
+        }
+
         // 智能响应处理：检测后端是否已返回订阅链接
         if (purchaseData.subscription_url) {
           // ✅ 后端已返回订阅链接，立即刷新产品列表
           console.log("✅ 后端已返回订阅链接，立即刷新")
-
-          // 🎯 Google Ads 转化追踪
-          if (typeof window !== 'undefined' && window.gtag) {
-            const googleAdsId = process.env.NEXT_PUBLIC_GOOGLE_ADS_ID
-            const conversionLabel = process.env.NEXT_PUBLIC_GOOGLE_ADS_CONVERSION_LABEL
-
-            if (googleAdsId && conversionLabel) {
-              // 生成唯一的交易ID，避免重复计数
-              const transactionId = `free-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-
-              // 🔍 可选：提取 gclid 用于调试 (gtag.js 会自动处理，这里仅用于日志)
-              const urlParams = new URLSearchParams(window.location.search)
-              const gclid = urlParams.get('gclid')
-
-              window.gtag('event', 'conversion', {
-                'send_to': `${googleAdsId}/${conversionLabel}`,
-                'value': 0.0,
-                'currency': 'CNY',
-                'transaction_id': transactionId
-              })
-
-              console.log("📊 Google Ads 转化事件已触发:", {
-                transactionId,
-                gclid: gclid || 'direct_traffic',
-                timestamp: new Date().toISOString()
-              })
-            }
-          }
-
           onPurchaseSuccess()
           alert(`${purchaseData.plan_name || plan.name}获取成功！订阅链接已生成`)
-        } else {
-          // ⏱️ 后端未返回订阅链接（异常情况），显示等待 Dialog 并启动轮询
-          console.log("⏱️ 后端未返回订阅链接，启动轮询机制")
+        } else if (purchaseData.order_id) {
+          // ⏱️ 后端未返回订阅链接但返回了 order_id，启动轮询机制
+          console.log("⏱️ 后端返回 order_id，启动轮询机制")
+
+          // 立即提示用户购买成功，正在生成产品
+          alert(`✅ ${purchaseData.plan_name || plan.name}购买成功！\n\n正在为您生成订阅链接，请稍候...`)
+
           setPurchasedPlanName(purchaseData.plan_name || plan.name)
+          setPollingOrderId(purchaseData.order_id)
           setShowWaitingDialog(true)
           setCountdownSeconds(50)
-          startPolling()
+        } else {
+          // ⚠️ 后端既没返回订阅链接也没返回 order_id（异常情况）
+          console.warn("⚠️ 后端响应缺少必要信息")
+          alert(`${purchaseData.plan_name || plan.name}购买成功，但订阅链接生成可能需要等待，请稍后刷新页面查看`)
+          onPurchaseSuccess()
         }
       } else {
         alert(purchaseData.message || "购买失败")
@@ -378,7 +379,7 @@ export function PricingSection({ onPurchaseSuccess }: PricingSectionProps) {
               <svg className="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              购买成功！
+              购买成功！正在生成订阅链接
             </DialogTitle>
             <DialogDescription className="space-y-4 pt-4">
               <div className="text-center">
@@ -389,13 +390,13 @@ export function PricingSection({ onPurchaseSuccess }: PricingSectionProps) {
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                 </div>
                 <p className="text-gray-700 mb-2">
-                  订阅链接正在生成中，请稍候...
+                  后端正在为您生成订阅链接和产品，请稍候...
                 </p>
                 <p className="text-sm text-amber-600 font-medium mb-2">
                   ⏱️ 预计需要 5-30 秒
                 </p>
                 <p className="text-sm text-red-600 font-bold">
-                  ⚠️ 请不要关闭此页面
+                  ⚠️ 请不要关闭此页面，否则可能无法自动获取订阅链接
                 </p>
               </div>
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-center">

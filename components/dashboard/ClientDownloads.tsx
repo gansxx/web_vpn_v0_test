@@ -4,6 +4,8 @@ import { useEffect, useState } from "react"
 import { API_BASE } from "@/lib/config"
 import { useWindowsDownloadUrl } from "@/hooks/useWindowsDownloadUrl"
 import { useAndroidDownloadUrl } from "@/hooks/useAndroidDownloadUrl"
+import { useMacosDownloadUrl } from "@/hooks/useMacosDownloadUrl"
+import { useLinuxDownloadUrl } from "@/hooks/useLinuxDownloadUrl"
 
 interface DownloadResponse {
   download_url: string
@@ -25,6 +27,18 @@ export function ClientDownloads() {
   const [androidError, setAndroidError] = useState<string | null>(null)
   const [androidFileSize, setAndroidFileSize] = useState<number | null>(null)
 
+  // macOS 下载状态
+  const [macosDownloadUrl, setMacosDownloadUrl] = useState<string | null>(null)
+  const [macosLoading, setMacosLoading] = useState(true)
+  const [macosError, setMacosError] = useState<string | null>(null)
+  const [macosFileSize, setMacosFileSize] = useState<number | null>(null)
+
+  // Linux 下载状态
+  const [linuxDownloadUrl, setLinuxDownloadUrl] = useState<string | null>(null)
+  const [linuxLoading, setLinuxLoading] = useState(true)
+  const [linuxError, setLinuxError] = useState<string | null>(null)
+  const [linuxFileSize, setLinuxFileSize] = useState<number | null>(null)
+
   const {
     storeDownloadUrl: storeWindowsUrl,
     getCachedDownloadUrl: getWindowsCachedUrl
@@ -34,6 +48,16 @@ export function ClientDownloads() {
     storeDownloadUrl: storeAndroidUrl,
     getCachedDownloadUrl: getAndroidCachedUrl
   } = useAndroidDownloadUrl()
+
+  const {
+    storeDownloadUrl: storeMacosUrl,
+    getCachedDownloadUrl: getMacosCachedUrl
+  } = useMacosDownloadUrl()
+
+  const {
+    storeDownloadUrl: storeLinuxUrl,
+    getCachedDownloadUrl: getLinuxCachedUrl
+  } = useLinuxDownloadUrl()
 
   // Fetch Windows download URL
   useEffect(() => {
@@ -53,7 +77,7 @@ export function ClientDownloads() {
 
         // 2. 无缓存则调用 API
         const response = await fetch(
-          `${API_BASE}/r2/packages/v2rayN_windows.zip/1.0.0/download`,
+          `${API_BASE}/r2/packages/Hiddify_Windows_Setup_x64.Msix/1.0.0/download`,
           {
             credentials: "include",
           }
@@ -104,7 +128,7 @@ export function ClientDownloads() {
 
         // 2. 无缓存则调用 API
         const response = await fetch(
-          `${API_BASE}/r2/packages/v2rayN_android.apk/1.0.0/download`,
+          `${API_BASE}/r2/packages/Hiddify_Android_universal.apk/1.0.0/download`,
           {
             credentials: "include",
           }
@@ -136,6 +160,108 @@ export function ClientDownloads() {
 
     fetchAndroidDownloadUrl()
   }, [getAndroidCachedUrl, storeAndroidUrl])
+
+  // Fetch macOS download URL
+  useEffect(() => {
+    const fetchMacosDownloadUrl = async () => {
+      try {
+        setMacosLoading(true)
+        setMacosError(null)
+
+        // 1. 首先检查缓存
+        const cached = getMacosCachedUrl()
+        if (cached && cached.download_url) {
+          setMacosDownloadUrl(cached.download_url)
+          setMacosFileSize(cached.file_size || null)
+          setMacosLoading(false)
+          return
+        }
+
+        // 2. 无缓存则调用 API
+        const response = await fetch(
+          `${API_BASE}/r2/packages/Hiddify_Macos.dmg/1.0.0/download`,
+          {
+            credentials: "include",
+          }
+        )
+
+        if (!response.ok) {
+          throw new Error(`获取下载链接失败: ${response.status}`)
+        }
+
+        const data: DownloadResponse = await response.json()
+
+        // 3. 存储到缓存
+        storeMacosUrl({
+          download_url: data.download_url,
+          file_size: data.file_size,
+          file_hash: data.file_hash
+        })
+
+        setMacosDownloadUrl(data.download_url)
+        if (data.file_size) {
+          setMacosFileSize(data.file_size)
+        }
+      } catch (err) {
+        setMacosError(err instanceof Error ? err.message : "获取下载链接失败")
+      } finally {
+        setMacosLoading(false)
+      }
+    }
+
+    fetchMacosDownloadUrl()
+  }, [getMacosCachedUrl, storeMacosUrl])
+
+  // Fetch Linux download URL
+  useEffect(() => {
+    const fetchLinuxDownloadUrl = async () => {
+      try {
+        setLinuxLoading(true)
+        setLinuxError(null)
+
+        // 1. 首先检查缓存
+        const cached = getLinuxCachedUrl()
+        if (cached && cached.download_url) {
+          setLinuxDownloadUrl(cached.download_url)
+          setLinuxFileSize(cached.file_size || null)
+          setLinuxLoading(false)
+          return
+        }
+
+        // 2. 无缓存则调用 API
+        const response = await fetch(
+          `${API_BASE}/r2/packages/Hiddify_Linux_x64.AppImage/1.0.0/download`,
+          {
+            credentials: "include",
+          }
+        )
+
+        if (!response.ok) {
+          throw new Error(`获取下载链接失败: ${response.status}`)
+        }
+
+        const data: DownloadResponse = await response.json()
+
+        // 3. 存储到缓存
+        storeLinuxUrl({
+          download_url: data.download_url,
+          file_size: data.file_size,
+          file_hash: data.file_hash
+        })
+
+        setLinuxDownloadUrl(data.download_url)
+        if (data.file_size) {
+          setLinuxFileSize(data.file_size)
+        }
+      } catch (err) {
+        setLinuxError(err instanceof Error ? err.message : "获取下载链接失败")
+      } finally {
+        setLinuxLoading(false)
+      }
+    }
+
+    fetchLinuxDownloadUrl()
+  }, [getLinuxCachedUrl, storeLinuxUrl])
 
   const formatFileSize = (bytes: number): string => {
     if (bytes < 1024) return `${bytes} B`
@@ -217,6 +343,95 @@ export function ClientDownloads() {
                 </>
               ) : windowsDownloadUrl ? (
                 <a href={windowsDownloadUrl} target="_blank" rel="noopener noreferrer">
+                  下载
+                </a>
+              ) : (
+                "获取中..."
+              )}
+            </button>
+          )}
+        </div>
+
+        {/* macOS 客户端 */}
+        <div className="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200">
+          <div className="flex items-center space-x-3">
+            <svg className="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
+              <path d="M32.92 42.7872H15.08C8.75998 42.7872 4.5 38.347 4.5 31.747V16.2471C4.5 9.74707 8.83998 5.20703 15.08 5.20703H32.92C39.24 5.20703 43.5 9.64707 43.5 16.2471V31.747C43.5 38.347 39.24 42.7872 32.92 42.7872ZM15.08 8.20703C10.48 8.20703 7.5 11.3671 7.5 16.2471V31.747C7.5 36.627 10.48 39.7872 15.08 39.7872H32.92C37.52 39.7872 40.5 36.627 40.5 31.747V16.2471C40.5 11.3671 37.52 8.20703 32.92 8.20703H15.08Z" fill="#6C757D"></path>
+              <path d="M27.3408 42.7904C26.6408 42.7904 26.0208 42.2908 25.8808 41.5908C25.3408 38.9308 24.9808 36.2704 24.7608 33.6704C24.5208 30.7104 24.5208 28.6704 24.5608 27.7504C23.7408 27.7304 22.9208 27.6508 22.0608 27.5308C19.6808 27.2308 19.2608 25.7306 19.1808 24.3106C19.0408 21.5506 21.0608 10.2506 21.8608 6.41059C22.0208 5.59059 22.8208 5.07045 23.6408 5.25045C24.4608 5.41045 24.9808 6.21071 24.8008 7.03071C23.8208 11.7907 22.0808 22.0508 22.1808 24.1508C22.1808 24.3108 22.2008 24.4308 22.2208 24.5108C22.2808 24.5108 22.3608 24.5308 22.4808 24.5508C23.4808 24.6908 24.3808 24.7504 25.2608 24.7504C26.0008 24.7504 26.5808 24.9706 27.0008 25.4106C27.6408 26.0906 27.6008 26.9308 27.5808 27.6108C27.5608 28.2108 27.5008 30.2706 27.7608 33.4106C27.9608 35.8906 28.3208 38.4306 28.8208 40.9706C28.9808 41.7906 28.4608 42.5704 27.6408 42.7304C27.5408 42.7304 27.4408 42.7504 27.3408 42.7504V42.7904Z" fill="#6C757D"></path>
+              <path d="M23.7004 35.7125C19.9004 35.7125 16.2604 34.3125 13.4404 31.7925C12.8204 31.2325 12.7804 30.2925 13.3204 29.6725C13.8804 29.0525 14.8204 29.0127 15.4404 29.5527C17.7204 31.5927 20.6404 32.7125 23.7004 32.7125C27.0204 32.7125 30.1604 31.4127 32.5204 29.0327C33.1004 28.4527 34.0604 28.4527 34.6404 29.0327C35.2204 29.6127 35.2204 30.5729 34.6404 31.1529C31.7204 34.0929 27.8204 35.7125 23.7004 35.7125Z" fill="#6C757D"></path>
+              <path d="M32.8606 20.334C32.0406 20.334 31.3606 19.654 31.3606 18.834V16.5742C31.3606 15.7542 32.0406 15.0742 32.8606 15.0742C33.6806 15.0742 34.3606 15.7542 34.3606 16.5742V18.834C34.3606 19.654 33.6806 20.334 32.8606 20.334ZM15.1406 20.334C14.3206 20.334 13.6406 19.654 13.6406 18.834V16.5742C13.6406 15.7542 14.3206 15.0742 15.1406 15.0742C15.9606 15.0742 16.6406 15.7542 16.6406 16.5742V18.834C16.6406 19.654 15.9606 20.334 15.1406 20.334Z" fill="#6C757D"></path>
+            </svg>
+            <div className="flex flex-col">
+              <span className="text-gray-900">macOS电脑客户端</span>
+              {macosFileSize && (
+                <span className="text-xs text-gray-500">{formatFileSize(macosFileSize)}</span>
+              )}
+            </div>
+          </div>
+          {macosError ? (
+            <span className="text-sm text-red-600">{macosError}</span>
+          ) : (
+            <button
+              disabled={macosLoading || !macosDownloadUrl}
+              className="bg-gray-800 text-white px-4 py-2 rounded text-sm hover:bg-gray-900 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              {macosLoading ? (
+                <>
+                  <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  加载中...
+                </>
+              ) : macosDownloadUrl ? (
+                <a href={macosDownloadUrl} target="_blank" rel="noopener noreferrer">
+                  下载
+                </a>
+              ) : (
+                "获取中..."
+              )}
+            </button>
+          )}
+        </div>
+
+        {/* Linux 客户端 */}
+        <div className="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200">
+          <div className="flex items-center space-x-3">
+            <svg className="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M21.21 14.125C22.0384 14.125 22.71 14.7966 22.71 15.625V19.1963C22.71 20.0248 22.0384 20.6964 21.21 20.6964C20.3816 20.6964 19.71 20.0248 19.71 19.1963V15.625C19.71 14.7966 20.3816 14.125 21.21 14.125Z" fill="#6C757D"></path>
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M26.792 14.125C27.6204 14.125 28.292 14.7966 28.292 15.625V19.1963C28.292 20.0248 27.6204 20.6964 26.792 20.6964C25.9636 20.6964 25.292 20.0248 25.292 19.1963V15.625C25.292 14.7966 25.9636 14.125 26.792 14.125Z" fill="#6C757D"></path>
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M27.2926 21.3585C28.0224 20.9665 28.9318 21.2405 29.3238 21.9703C31.664 26.3277 32.3218 31.3931 31.1724 36.2037C30.98 37.0095 30.1706 37.5065 29.3648 37.3141C28.5592 37.1215 28.062 36.3123 28.2546 35.5065C29.233 31.4113 28.673 27.0991 26.6808 23.3897C26.2888 22.6599 26.5626 21.7505 27.2926 21.3585Z" fill="#6C757D"></path>
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M20.7092 21.3585C21.439 21.7505 21.713 22.6599 21.321 23.3897C19.3291 27.0989 18.7691 31.4107 19.7476 35.5057C19.9401 36.3113 19.443 37.1207 18.6372 37.3131C17.8315 37.5057 17.0222 37.0085 16.8297 36.2029C15.6803 31.3925 16.3381 26.3275 18.678 21.9703C19.07 21.2405 19.9794 20.9665 20.7092 21.3585Z" fill="#6C757D"></path>
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M24.001 8.75781C20.2054 8.75781 17.1284 11.8348 17.1284 15.6304V16.1799C17.1283 20.3704 15.819 24.456 13.3834 27.866C13.3834 27.866 13.3835 27.8658 13.3834 27.866L13.117 28.239C13.1163 28.24 13.1156 28.241 13.1149 28.242C12.834 28.6412 12.6934 29.1222 12.7151 29.61C12.7518 30.4376 12.1107 31.1382 11.2831 31.175C10.4555 31.2118 9.75476 30.5706 9.71802 29.743C9.66682 28.5896 10.0003 27.452 10.6661 26.5088L10.6708 26.5022L10.942 26.1224C13.0143 23.2214 14.1283 19.7451 14.1284 16.1799V15.6304C14.1284 10.1779 18.5485 5.75781 24.001 5.75781C29.4534 5.75781 33.8734 10.1779 33.8734 15.6304V16.1799C33.8734 19.7451 34.9874 23.2212 37.0596 26.1224L37.3358 26.5088C38.0016 27.452 38.335 28.5896 38.2838 29.743C38.247 30.5706 37.5464 31.2118 36.7188 31.175C35.8912 31.1382 35.25 30.4376 35.2868 29.61C35.3084 29.1222 35.1678 28.6412 34.8868 28.242C34.8862 28.241 34.8856 28.24 34.8848 28.239L34.6184 27.866C32.1828 24.4562 30.8734 20.3704 30.8734 16.1799V15.6304C30.8734 11.8348 27.7966 8.75781 24.001 8.75781Z" fill="#6C757D"></path>
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M27.9228 36.6535C27.9228 36.6533 27.923 36.6535 27.9228 36.6535L28.0142 36.7109C28.0138 36.7105 28.0148 36.7113 28.0142 36.7109C28.6718 37.1211 29.4286 37.3497 30.2032 37.3713C31.0314 37.3943 31.684 38.0845 31.661 38.9125C31.6378 39.7407 30.9478 40.3933 30.1198 40.3701C28.811 40.3337 27.5358 39.9489 26.4254 39.2555L26.422 39.2535L26.3268 39.1937C24.905 38.2999 23.0968 38.2997 21.675 39.1933L21.576 39.2555C20.4656 39.9489 19.1903 40.3337 17.8816 40.3701C17.0535 40.3933 16.3635 39.7407 16.3404 38.9125C16.3174 38.0845 16.97 37.3943 17.7981 37.3713C18.5728 37.3497 19.3279 37.1221 19.9855 36.7119L20.0786 36.6535C20.0784 36.6535 20.0786 36.6533 20.0786 36.6535C22.476 35.1467 25.5254 35.1467 27.9228 36.6535Z" fill="#6C757D"></path>
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M22.5462 17.0617C23.4456 16.5419 24.5538 16.5419 25.4532 17.0617L28.6886 18.9314C30.423 19.9338 30.646 22.3496 29.1246 23.6526L25.8892 26.4234C24.8016 27.3548 23.1978 27.3548 22.1102 26.4234L18.8748 23.6526C17.3533 22.3496 17.5764 19.9338 19.3108 18.9314L22.5462 17.0617ZM23.9996 19.6866L20.9284 21.4616L23.9996 24.0918L27.071 21.4616L23.9996 19.6866Z" fill="#6C757D"></path>
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M36.0831 27.2232C36.5421 27.3012 36.9371 27.5118 37.2453 27.8128C37.4507 28.0138 37.5953 28.2326 37.6983 28.431C37.9897 28.2606 38.3293 28.1108 38.6931 28.0172C39.3883 27.8382 40.4539 27.811 41.3219 28.637L41.3265 28.6412C42.6037 29.8668 42.2979 31.4938 42.0103 32.3564C41.9979 32.3936 41.9869 32.4278 41.9775 32.4594C41.9989 32.4702 42.0211 32.4816 42.0433 32.4934C42.2053 32.579 42.4383 32.7132 42.6667 32.9176C43.2063 33.4 43.5003 34.0708 43.5003 34.8872C43.5003 35.784 43.0783 36.6292 42.3587 37.1674L42.3267 37.1906L36.6897 41.1786C34.5447 42.7746 31.5527 42.556 29.6611 40.6644C27.7647 38.7674 27.5503 35.765 29.1603 33.6184L29.1673 33.6092L33.1753 28.3502C33.6477 27.7232 34.6941 26.9354 36.0831 27.2232ZM35.2329 30.5994L31.5573 35.4224C30.8467 36.374 30.9423 37.7026 31.7827 38.5434C32.6245 39.385 33.9561 39.4794 34.9073 38.7656L34.9413 38.7406L40.2797 34.9638C39.9633 34.796 39.3493 34.4284 39.0611 33.6362C38.7923 32.8976 38.9273 32.1178 39.1643 31.4072C39.2221 31.234 39.2503 31.0968 39.2607 30.9944C39.2505 30.9996 39.2403 31.005 39.2301 31.0108C39.1937 31.0312 39.1635 31.0508 39.1413 31.0666C39.1261 31.0774 39.1179 31.0842 39.1163 31.0856C38.8199 31.3612 38.5211 31.6048 38.2199 31.784C37.9419 31.9492 37.4883 32.165 36.9347 32.1248C36.2715 32.0766 35.8191 31.6966 35.5673 31.332C35.3813 31.0628 35.2849 30.779 35.2329 30.5994Z" fill="#6C757D"></path>
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M11.9171 27.2232C11.4582 27.3012 11.0632 27.5118 10.755 27.8128C10.5495 28.0138 10.4051 28.2326 10.302 28.431C10.0105 28.2606 9.67104 28.1108 9.3072 28.0172C8.61192 27.8382 7.54642 27.811 6.67832 28.637L6.67376 28.6412C5.39658 29.8668 5.7024 31.4938 5.99006 32.3564C6.00248 32.3936 6.0133 32.4278 6.02272 32.4594C6.00128 32.4702 5.97924 32.4816 5.95704 32.4934C5.79504 32.579 5.56196 32.7132 5.3335 32.9176C4.79392 33.4 4.5 34.0708 4.5 34.8872C4.5 35.784 4.92192 36.6292 5.64166 37.1674L5.67354 37.1906L11.3105 41.1786C13.4557 42.7746 16.4475 42.556 18.3392 40.6644C20.2356 38.7674 20.45 35.765 18.8399 33.6184L18.833 33.6092L14.825 28.3502C14.3526 27.7232 13.3061 26.9354 11.9171 27.2232ZM12.7673 30.5994L16.443 35.4224C17.1535 36.374 17.058 37.7026 16.2177 38.5434C15.3758 39.385 14.0441 39.4794 13.0931 38.7656L13.059 38.7406L7.72052 34.9638C8.03706 34.796 8.651 34.4284 8.93924 33.6362C9.20798 32.8976 9.07298 32.1178 8.83594 31.4072C8.77822 31.234 8.74998 31.0968 8.73964 30.9944C8.74974 30.9996 8.7599 31.005 8.7701 31.0108C8.8065 31.0312 8.83676 31.0508 8.85902 31.0666C8.87424 31.0774 8.88234 31.0842 8.88406 31.0856C9.18046 31.3612 9.47918 31.6048 9.78044 31.784C10.0584 31.9492 10.512 32.165 11.0656 32.1248C11.7288 32.0766 12.1811 31.6966 12.433 31.332C12.619 31.0628 12.7154 30.779 12.7673 30.5994Z" fill="#6C757D"></path>
+            </svg>
+            <div className="flex flex-col">
+              <span className="text-gray-900">Linux电脑客户端</span>
+              {linuxFileSize && (
+                <span className="text-xs text-gray-500">{formatFileSize(linuxFileSize)}</span>
+              )}
+            </div>
+          </div>
+          {linuxError ? (
+            <span className="text-sm text-red-600">{linuxError}</span>
+          ) : (
+            <button
+              disabled={linuxLoading || !linuxDownloadUrl}
+              className="bg-gray-700 text-white px-4 py-2 rounded text-sm hover:bg-gray-800 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              {linuxLoading ? (
+                <>
+                  <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  加载中...
+                </>
+              ) : linuxDownloadUrl ? (
+                <a href={linuxDownloadUrl} target="_blank" rel="noopener noreferrer">
                   下载
                 </a>
               ) : (

@@ -379,7 +379,8 @@ export function PricingSection({ onPurchaseSuccess }: PricingSectionProps) {
               <svg className="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              购买成功！正在生成订阅链接
+              购买成功！正在生成订阅链接,预计需要 5-10 秒
+              
             </DialogTitle>
             <DialogDescription className="space-y-4 pt-4">
               <div className="text-center">
@@ -393,10 +394,11 @@ export function PricingSection({ onPurchaseSuccess }: PricingSectionProps) {
                   后端正在为您生成订阅链接和产品，请稍候...
                 </p>
                 <p className="text-sm text-amber-600 font-medium mb-2">
-                  ⏱️ 预计需要 5-30 秒
+                  ⏱️ 预计需要 5-10 秒
                 </p>
                 <p className="text-sm text-red-600 font-bold">
                   ⚠️ 请不要关闭此页面，否则可能无法自动获取订阅链接
+                  如有任何问题，请发送工单
                 </p>
               </div>
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-center">

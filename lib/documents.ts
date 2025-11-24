@@ -27,15 +27,7 @@ export const documents: DocumentMeta[] = [
       //   icon: "🪟",
       //   lastUpdated: "2025-01-15"
       // },
-      // {
-      //   id: "tutorial-android",
-      //   title: "Android客户端使用教程",
-      //   description: "详细的Android客户端下载、安装和配置指南，包含订阅链接获取和导入步骤",
-      //   category: "使用教程",
-      //   filename: "subscription_android.md",
-      //   icon: "📱",
-      //   lastUpdated: "2025-01-15"
-      // },
+      
       {
         id:"tutorial-util",
         title:"VPN客户端使用教程",
@@ -44,6 +36,15 @@ export const documents: DocumentMeta[] = [
         filename: "subscription_util.md",
         icon: "📱",
         lastUpdated: "2025-01-15"
+      },
+      {
+        id: "tutorial-advanced",
+        title: "高级全局流量代理教程",
+        description: "详细的全局流量代理",
+        category: "使用教程",
+        filename: "subscription_total_exe.md",
+        icon: "📱",
+        lastUpdated: "2025-11-15"
       }
     ]
   },

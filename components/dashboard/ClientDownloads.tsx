@@ -160,8 +160,8 @@ export function ClientDownloads() {
       <div className="space-y-3">
         <DownloadButton platformKey="android" />
         <DownloadButton platformKey="windows" />
-        <DownloadButton platformKey="macos" />
-        <DownloadButton platformKey="linux" />
+        
+        
 
         {/* Google Play 客户端 - 静态链接 */}
         <div className="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200">
@@ -211,6 +211,8 @@ export function ClientDownloads() {
             前往下载
           </a>
         </div>
+        <DownloadButton platformKey="macos" />
+        <DownloadButton platformKey="linux" />
       </div>
     </div>
   )

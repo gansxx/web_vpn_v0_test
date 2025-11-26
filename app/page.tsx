@@ -71,6 +71,9 @@ export default function HomePage() {
             >
               下载
             </button>
+            <a href="/blog" className="text-muted-foreground hover:text-primary transition-colors">
+              发现世界
+            </a>
             <a href="/dashboard" className="text-muted-foreground hover:text-primary transition-colors">
               控制台
             </a>

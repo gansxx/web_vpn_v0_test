@@ -9,7 +9,7 @@ function isAuthMiddlewareDisabled(): boolean {
 }
 
 // 白名单：对 "/" 用精确匹配，其它按精确或前缀匹配
-const PUBLIC_PATHS = ["/", "/signin", "/favicon.ico"];
+const PUBLIC_PATHS = ["/", "/signin", "/register", "/recall", "/blog", "/favicon.ico"];
 const PUBLIC_PREFIXES = ["/_next", "/api"];
 
 function isPublicPath(pathname: string) {

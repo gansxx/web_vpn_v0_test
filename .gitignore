@@ -33,3 +33,5 @@ next-env.d.ts
 
 /public/google-ads-logos
 /mess
+/turnstile-proxy-worker
+/.claude

@@ -3,9 +3,15 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { BLOG_CATEGORIES } from "@/lib/blog-data"
+import { trackLinkClick } from "@/lib/analytics"
 import { ExternalLink } from "lucide-react"
 
 export default function BlogPage() {
+  // 处理链接点击，追踪事件
+  const handleLinkClick = (categoryName: string, entryName: string, entryUrl: string) => {
+    trackLinkClick(categoryName, entryName, entryUrl)
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-accent/10">
       {/* Header with Navigation */}
@@ -86,6 +92,7 @@ export default function BlogPage() {
                         href={entry.url}
                         target="_blank"
                         rel="noopener noreferrer"
+                        onClick={() => handleLinkClick(category.name, entry.name, entry.url)}
                         className="block p-4 rounded-lg border bg-muted/50 hover:bg-muted transition-colors group/entry"
                       >
                         <div className="flex items-start justify-between gap-3">

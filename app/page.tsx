@@ -13,6 +13,7 @@ export default function HomePage() {
   }
 
   // Debug: 在控制台输出应用版本和环境变量（支持 Vercel 等部署平台）
+  // 后续在这里加上只在开发这模式上输出
   useEffect(() => {
     if (typeof window === "undefined") return
 

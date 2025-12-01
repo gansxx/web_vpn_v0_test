@@ -1,0 +1,83 @@
+# robots.txt for Z加速 VPN Service
+
+# ==============================================
+# Google Search Bot (Preferred crawler)
+# ==============================================
+User-agent: Googlebot
+Disallow: /dashboard/
+Disallow: /api/
+Disallow: /_next/
+Allow: /
+Disallow: /signin
+Disallow: /register
+Disallow: /recall
+Allow: /blog
+Allow: /doc/
+Crawl-delay: 0
+
+# ==============================================
+# Bing Search Bot
+# ==============================================
+User-agent: Bingbot
+Disallow: /dashboard/
+Disallow: /api/
+Disallow: /_next/
+Allow: /
+DisAllow: /signin
+DisAllow: /register
+DisAllow: /recall
+Allow: /blog
+Allow: /doc/
+Crawl-delay: 1
+
+# ==============================================
+# Baidu Search Bot (Chinese search engine)
+# ==============================================
+User-agent: Baiduspider
+Disallow: /dashboard/
+Disallow: /api/
+Disallow: /_next/
+Allow: /
+DisAllow: /signin
+DisAllow: /register
+DisAllow: /recall
+Allow: /blog
+Allow: /doc/
+Crawl-delay: 2
+
+# ==============================================
+# Other Search Engines
+# ==============================================
+User-agent: *
+Disallow: /dashboard/
+Disallow: /api/
+Disallow: /_next/
+Allow: /
+DisAllow: /signin
+DisAllow: /register
+DisAllow: /recall
+Allow: /blog
+Allow: /doc/
+
+# ==============================================
+# Bad Bots (Block malicious crawlers)
+# ==============================================
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /
+
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: DotBot
+Disallow: /
+
+User-agent: archive.org_bot
+Disallow: /
+
+# ==============================================
+# Sitemap Location
+# ==============================================
+Sitemap: https://go.superjiasu.top/sitemap.xml

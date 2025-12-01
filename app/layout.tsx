@@ -40,11 +40,12 @@ html {
         {children}
 
         {/* Google Analytics & Ads - gtag.js */}
+        {/* use go.superjiasu.top/gtag.js to proxy the js script */}
         {hasAnyId && (
           <>
             <Script
               strategy="afterInteractive"
-              src={`https://www.googletagmanager.com/gtag/js?id=${primaryId}`}
+              src={`https://go.superjiasu.top/gtag/js?id=${primaryId}`}
             />
             <Script id="gtag-init" strategy="afterInteractive">
               {`

@@ -1,5 +1,4 @@
 import { useCallback, useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import {
@@ -21,8 +20,7 @@ interface PricingSectionProps {
 }
 
 export function PricingSection({ onPurchaseSuccess }: PricingSectionProps) {
-  const router = useRouter()
-  const [purchasingFreePlan, setPurchasingFreePlan] = useState(false)
+  const [purchasingFreeLikePlan, setPurchasingFreeLikePlan] = useState(false)
   const [showWaitingDialog, setShowWaitingDialog] = useState(false)
   const [countdownSeconds, setCountdownSeconds] = useState(50)
   const [purchasedPlanName, setPurchasedPlanName] = useState("")
@@ -30,7 +28,7 @@ export function PricingSection({ onPurchaseSuccess }: PricingSectionProps) {
 
   // 支付方式选择相关状态
   const [showPaymentDialog, setShowPaymentDialog] = useState(false)
-  const [purchasing, setPurchasing] = useState(false)
+  const [purchasingPaidPlan, setPurchasingPaidPlan] = useState(false)
   const [selectedPlanId, setSelectedPlanId] = useState<string>("")
 
   const handleCloseWaitingDialog = useCallback(() => {
@@ -42,7 +40,7 @@ export function PricingSection({ onPurchaseSuccess }: PricingSectionProps) {
 
   // 处理高级套餐支付
   const handlePremiumPurchase = useCallback(async () => {
-    setPurchasing(true)
+    setPurchasingPaidPlan(true)
     try {
       const result = await purchaseAdvancedPlan({
         plan_name: "Z加速-高级套餐",
@@ -56,20 +54,20 @@ export function PricingSection({ onPurchaseSuccess }: PricingSectionProps) {
         window.location.href = result.payment_data.checkout_url
       } else {
         alert(result.message || "创建支付会话失败")
-        setPurchasing(false)
+        setPurchasingPaidPlan(false)
         setShowPaymentDialog(false)
       }
     } catch (error: any) {
       console.error("购买高级套餐失败:", error)
       alert(error?.message || "购买失败，请重试")
-      setPurchasing(false)
+      setPurchasingPaidPlan(false)
       setShowPaymentDialog(false)
     }
   }, [])
 
   // 处理无限流量套餐支付
   const handleEnterprisePurchase = useCallback(async () => {
-    setPurchasing(true)
+    setPurchasingPaidPlan(true)
     try {
       const result = await purchaseUnlimitedPlan({
         plan_name: "Z加速-无限流量套餐",
@@ -83,13 +81,13 @@ export function PricingSection({ onPurchaseSuccess }: PricingSectionProps) {
         window.location.href = result.payment_data.checkout_url
       } else {
         alert(result.message || "创建支付会话失败")
-        setPurchasing(false)
+        setPurchasingPaidPlan(false)
         setShowPaymentDialog(false)
       }
     } catch (error: any) {
       console.error("购买无限流量套餐失败:", error)
       alert(error?.message || "购买失败，请重试")
-      setPurchasing(false)
+      setPurchasingPaidPlan(false)
       setShowPaymentDialog(false)
     }
   }, [])
@@ -174,25 +172,11 @@ export function PricingSection({ onPurchaseSuccess }: PricingSectionProps) {
     return () => clearInterval(pollInterval)
   }, [pollingOrderId, showWaitingDialog, handleCloseWaitingDialog])
 
-  const purchasePlan = useCallback(async (plan: any) => {
-    // 高级套餐（premium）：显示支付方式选择弹窗
-    if (plan.id === "premium") {
-      setSelectedPlanId(plan.id)
-      setShowPaymentDialog(true)
-      return
-    }
-
-    // 无限流量套餐（enterprise）：显示支付方式选择弹窗
-    if (plan.id === "enterprise") {
-      setSelectedPlanId(plan.id)
-      setShowPaymentDialog(true)
-      return
-    }
-
-    // 免费套餐：保持原有逻辑
-    setPurchasingFreePlan(true)
+  // 通用购买逻辑（适用于免费套餐和礼品套餐）
+  const purchaseFreeLikePlan = useCallback(async (plan: any, endpoint: string) => {
+    setPurchasingFreeLikePlan(true)
     try {
-      const purchaseResponse = await fetch(`${API_BASE}/user/free-plan/purchase`, {
+      const purchaseResponse = await fetch(`${API_BASE}${endpoint}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -221,7 +205,7 @@ export function PricingSection({ onPurchaseSuccess }: PricingSectionProps) {
 
           if (googleAdsId && conversionLabel) {
             // 生成唯一的交易ID，避免重复计数
-            const transactionId = `free-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`
+            const transactionId = `${plan.id}-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`
 
             // 🔍 可选：提取 gclid 用于调试 (gtag.js 会自动处理，这里仅用于日志)
             const urlParams = new URLSearchParams(window.location.search)
@@ -269,12 +253,37 @@ export function PricingSection({ onPurchaseSuccess }: PricingSectionProps) {
         alert(purchaseData.message || "购买失败")
       }
     } catch (e: any) {
-      console.error("购买套餐失败:", e)
+      console.error(`购买${plan.name}失败:`, e)
       alert(e?.message || "购买失败，请重试")
     } finally {
-      setPurchasingFreePlan(false)
+      setPurchasingFreeLikePlan(false)
     }
-  }, [onPurchaseSuccess, router])
+  }, [onPurchaseSuccess])
+
+  const purchasePlan = useCallback(async (plan: any) => {
+    // 高级套餐（premium）：显示支付方式选择弹窗
+    if (plan.id === "premium") {
+      setSelectedPlanId(plan.id)
+      setShowPaymentDialog(true)
+      return
+    }
+
+    // 无限流量套餐（enterprise）：显示支付方式选择弹窗
+    if (plan.id === "enterprise") {
+      setSelectedPlanId(plan.id)
+      setShowPaymentDialog(true)
+      return
+    }
+
+    // 🎁 礼品套餐：使用通用购买逻辑
+    if (plan.id === "gift") {
+      await purchaseFreeLikePlan(plan, "/user/gift-plan/purchase")
+      return
+    }
+
+    // 免费套餐：使用通用购买逻辑
+    await purchaseFreeLikePlan(plan, "/user/free-plan/purchase")
+  }, [purchaseFreeLikePlan])
 
   return (
     <div className="space-y-6">
@@ -323,10 +332,10 @@ export function PricingSection({ onPurchaseSuccess }: PricingSectionProps) {
                   variant={btnVariant as any}
                   className={`w-full ${btnClass}`}
                   size="lg"
-                  disabled={plan.ctaDisabled || purchasingFreePlan}
+                  disabled={plan.ctaDisabled || purchasingFreeLikePlan || purchasingPaidPlan}
                   onClick={() => purchasePlan(plan)}
                 >
-                  {purchasingFreePlan ? "处理中..." : plan.ctaText}
+                  {(purchasingFreeLikePlan || purchasingPaidPlan) ? "处理中..." : plan.ctaText}
                 </Button>
               </CardContent>
             </Card>
@@ -346,7 +355,7 @@ export function PricingSection({ onPurchaseSuccess }: PricingSectionProps) {
           <div className="space-y-3 pt-4">
             <Button
               onClick={handlePayment}
-              disabled={purchasing}
+              disabled={purchasingPaidPlan}
               className="w-full h-auto py-4 px-6 flex items-center justify-between hover:bg-blue-600 transition-colors"
               variant="default"
             >
@@ -359,7 +368,7 @@ export function PricingSection({ onPurchaseSuccess }: PricingSectionProps) {
                   </div>
                 </div>
               </div>
-              {purchasing ? (
+              {purchasingPaidPlan ? (
                 <Loader2 className="h-5 w-5 animate-spin" />
               ) : (
                 <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

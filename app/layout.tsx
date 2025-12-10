@@ -45,7 +45,7 @@ html {
           <>
             <Script
               strategy="afterInteractive"
-              src={`https://go.superjiasu.top/gtag/js?id=${primaryId}`}
+              src={`https://www.googletagmanager.com/gtag/js?id=${primaryId}`}
             />
             <Script id="gtag-init" strategy="afterInteractive">
               {`

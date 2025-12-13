@@ -3,7 +3,6 @@
 import { useEffect, useState, FormEvent, ChangeEvent } from "react"
 import { API_BASE, DEV_MODE_ENABLED } from "@/lib/config"
 import Turnstile from "@/components/Turnstile"
-import { supabase } from "@/lib/supabase"
 // cookie获取逻辑
 function getCookie(name: string): string | null {
   if (typeof document === "undefined") return null
@@ -202,40 +201,32 @@ export default function SignInPage() {
     setError(null)
 
     try {
-      console.log('[OAuth] Starting Google OAuth flow...')
-      console.log('[OAuth] Current origin:', window.location.origin)
-      console.log('[OAuth] Redirect target:', `${window.location.origin}/auth/callback?next=/dashboard`)
+      // 调用后端 API 获取 Google OAuth URL
+      const apiBase = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8000'
+      console.log('[Google OAuth] Calling backend API:', `${apiBase}/google/url`)
 
-      // Temporary: try without query params in redirectTo
-      const redirectUrl = `${window.location.origin}/auth/callback`
-      console.log('[OAuth] Simple redirect URL (without next param):', redirectUrl)
-
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: redirectUrl,
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'consent',
-          },
-          // Explicitly use PKCE flow (should be default, but let's be explicit)
-          skipBrowserRedirect: false,
-        },
+      const response = await fetch(`${apiBase}/google/url`, {
+        method: 'GET',
+        credentials: 'include', // 携带 cookies
       })
 
-      console.log('[OAuth] signInWithOAuth response:', { data, error })
-
-      if (error) {
-        console.error('[OAuth] Error from Supabase:', error)
-        throw error
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.detail || 'Failed to get OAuth URL')
       }
 
-      if (data?.url) {
-        console.log('[OAuth] OAuth URL generated:', data.url)
-        console.log('[OAuth] Should redirect to Google now...')
-      } else {
-        console.warn('[OAuth] No URL in response data!', data)
+      const data = await response.json()
+      const oauthUrl = data.url
+
+      if (!oauthUrl) {
+        throw new Error('No OAuth URL returned')
       }
+
+      console.log('[Google OAuth] OAuth URL received:', oauthUrl)
+      console.log('[Google OAuth] Redirecting to Google...')
+
+      // 重定向到 Google OAuth
+      window.location.href = oauthUrl
 
       // User will be redirected to Google
       // No need to handle response here

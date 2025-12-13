@@ -46,6 +46,7 @@ export default function HomePage() {
             </div>
             <span className="text-xl font-bold text-foreground">Z加速</span>
           </div>
+          
 
           <nav className="hidden md:flex items-center space-x-8">
             <button
@@ -83,10 +84,12 @@ export default function HomePage() {
             </Button>
           </nav>
         </div>
+        
       </header>
 
       <section className="py-24 px-6 relative overflow-hidden bg-gradient-to-b from-transparent via-primary/5 to-transparent">
         <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-transparent to-accent/10 pointer-events-none"></div>
+        
         <div className="container mx-auto text-center max-w-4xl relative z-10">
           <div className="animate-fade-in-up">
             <h1 className="text-5xl md:text-7xl font-bold text-foreground mb-6 text-balance">

@@ -2,6 +2,8 @@ export type Plan = {
   id: string
   name: string
   priceDisplay: string
+  originalPrice?: string
+  promotionLabel?: string
   description: string
   features: string[]
   badgeText?: string
@@ -32,18 +34,54 @@ export type Plan = {
 }
 
 export const PLANS: Plan[] = [
+  // {
+  //   id: "free",
+  //   name: "免费套餐",
+  //   priceDisplay: "¥0",
+  //   description: "适用于基本网页访问",
+  //   features: [
+  //     "使用量：100MB/月",
+  //     "使用时间：无限制",
+  //     "基础节点访问",
+  //     "多平台支持",
+  //   ],
+  //   ctaText: "立即开始",
+  //   styles: {
+  //     home: {
+  //       cardBorder: "border-primary/20",
+  //       overlay: "from-primary/5",
+  //       priceText: "text-primary",
+  //       featureDotBg: "bg-primary",
+  //       featureDotIcon: "text-primary-foreground",
+  //       buttonVariant: "default",
+  //     },
+  //     dashboard: {
+  //       cardBorder: "border-blue-200",
+  //       cardBg: "bg-gradient-to-br from-blue-50 to-white",
+  //       priceText: "text-blue-600",
+  //       featureDotBg: "bg-blue-600",
+  //       featureDotIcon: "text-white",
+  //       buttonVariant: "default",
+  //       buttonClass: "bg-blue-600 hover:bg-blue-700",
+  //     },
+  //   },
+  // },
   {
-    id: "free",
-    name: "免费套餐",
+    id: "gift",
+    name: "初级套餐",
     priceDisplay: "¥0",
-    description: "适用于基本网页访问",
+    originalPrice: "¥99",
+    promotionLabel: "限时特价",
+    description: "2025.12.31日恢复原价",
     features: [
-      "使用量：100MB/月",
-      "使用时间：无限制",
+      "使用量:不限",
+      "使用时间:3个月",
       "基础节点访问",
       "多平台支持",
     ],
-    ctaText: "立即开始",
+    badgeText: "限时礼品",
+    ctaText: "立即领取",
+    ctaDisabled: false,
     styles: {
       home: {
         cardBorder: "border-primary/20",
@@ -63,6 +101,28 @@ export const PLANS: Plan[] = [
         buttonClass: "bg-blue-600 hover:bg-blue-700",
       },
     },
+    // styles: {
+    //   home: {
+    //     cardBorder: "border-green-300",
+    //     overlay: "from-green-500/10",
+    //     priceText: "text-green-600",
+    //     featureDotBg: "bg-green-500",
+    //     featureDotIcon: "text-white",
+    //     badgeClass: "bg-green-500 text-white",
+    //     buttonVariant: "default",
+    //     buttonClass: "bg-green-600 hover:bg-green-700",
+    //   },
+    //   dashboard: {
+    //     cardBorder: "border-green-300",
+    //     cardBg: "bg-gradient-to-br from-green-50 to-white",
+    //     priceText: "text-green-600",
+    //     featureDotBg: "bg-green-500",
+    //     featureDotIcon: "text-white",
+    //     badgeClass: "bg-green-500 text-white rounded-bl-lg",
+    //     buttonVariant: "default",
+    //     buttonClass: "bg-green-600 hover:bg-green-700",
+    //   },
+    // },
   },
   {
     id: "premium",
@@ -138,41 +198,5 @@ export const PLANS: Plan[] = [
       },
     },
   },
-  {
-    id: "gift",
-    name: "礼品套餐",
-    priceDisplay: "¥0",
-    description: "12.14日前过期",
-    features: [
-      "使用量:不限",
-      "使用时间:3个月",
-      "基础节点访问",
-      "多平台支持",
-    ],
-    badgeText: "限时礼品",
-    ctaText: "立即领取",
-    ctaDisabled: false,
-    styles: {
-      home: {
-        cardBorder: "border-green-300",
-        overlay: "from-green-500/10",
-        priceText: "text-green-600",
-        featureDotBg: "bg-green-500",
-        featureDotIcon: "text-white",
-        badgeClass: "bg-green-500 text-white",
-        buttonVariant: "default",
-        buttonClass: "bg-green-600 hover:bg-green-700",
-      },
-      dashboard: {
-        cardBorder: "border-green-300",
-        cardBg: "bg-gradient-to-br from-green-50 to-white",
-        priceText: "text-green-600",
-        featureDotBg: "bg-green-500",
-        featureDotIcon: "text-white",
-        badgeClass: "bg-green-500 text-white rounded-bl-lg",
-        buttonVariant: "default",
-        buttonClass: "bg-green-600 hover:bg-green-700",
-      },
-    },
-  },
+  
 ]

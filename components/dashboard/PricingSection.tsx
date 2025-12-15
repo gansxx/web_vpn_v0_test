@@ -313,7 +313,21 @@ export function PricingSection({ onPurchaseSuccess }: PricingSectionProps) {
               <CardContent className="p-6">
                 <div className="text-center mb-6">
                   <h3 className="text-2xl font-bold text-gray-900 mb-2">{plan.name}</h3>
-                  <div className={`text-4xl font-bold mb-2 ${priceClass}`}>{plan.priceDisplay}</div>
+                  <div className="mb-2 flex items-center justify-center gap-2">
+                    {plan.originalPrice && (
+                      <div className="text-xl text-gray-500 line-through">
+                        {plan.originalPrice}
+                      </div>
+                    )}
+                    <div className={`text-5xl font-bold ${priceClass}`}>
+                      {plan.priceDisplay}
+                    </div>
+                    {plan.promotionLabel && (
+                      <span className="text-sm font-medium text-red-600 bg-red-50 px-2 py-1 rounded self-start mt-1">
+                        {plan.promotionLabel}
+                      </span>
+                    )}
+                  </div>
                   <p className="text-gray-600">{plan.description}</p>
                 </div>
                 <div className="space-y-4 mb-8">

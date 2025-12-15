@@ -45,6 +45,15 @@ export const documents: DocumentMeta[] = [
         filename: "subscription_total_exe.md",
         icon: "📱",
         lastUpdated: "2025-11-15"
+      },
+      {
+        id: "tutorial-ios-region",
+        title: "iOS用户重要提示",
+        description: "iOS应用下载需要使用美区Apple ID的说明和操作指南",
+        category: "使用教程",
+        filename: "ios_appstore_region.md",
+        icon: "🍎",
+        lastUpdated: "2024-12-15"
       }
     ]
   },

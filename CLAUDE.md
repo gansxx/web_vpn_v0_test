@@ -98,3 +98,155 @@ This is a VPN service web application called "Z加速" (Z-Acceleration) built wi
 - Real-time product status updates
 - Responsive design across all screen sizes
 - Chinese language interface with "Z加速" branding
+
+## Documentation Management
+
+### Adding New Documentation
+
+To add a new help document to the documentation system, follow these steps:
+
+#### Step 1: Create the Markdown File
+Create your document in `/public/doc/` directory:
+
+```bash
+# Example: /public/doc/your_document.md
+```
+
+**Document Format Guidelines:**
+- Use Markdown format with Chinese content
+- Include colored headers: `# <font color="#1f497d">标题</font>`
+- Use emoji for visual appeal: ✨ ⚙️ ➡️ ⚠️ 💡 etc.
+- Add warning boxes: `> ⚠️ **重要提示**: 内容`
+- Structure with clear sections using `##` headings
+- Include step-by-step instructions where applicable
+
+**Example Structure:**
+```markdown
+# <font color="#1f497d">文档标题</font>
+
+> ⚠️ **重要提示**: 关键信息
+
+## 📱 问题说明
+[说明内容]
+
+## ✅ 解决方案
+### 步骤 1
+### 步骤 2
+
+## 💡 注意事项
+
+## ❓ 常见问题
+```
+
+#### Step 2: Register in documents.ts
+Add your document to `/lib/documents.ts`:
+
+```typescript
+{
+  id: "unique-document-id",
+  title: "文档显示标题",
+  description: "简短的文档描述",
+  category: "使用教程",
+  filename: "your_document.md",
+  icon: "🍎",  // Choose appropriate emoji
+  lastUpdated: "2024-12-15"
+}
+```
+
+**Document Metadata Fields:**
+- `id`: Unique identifier (kebab-case)
+- `title`: Display title shown in UI
+- `description`: Brief description for search/preview
+- `category`: Category name (e.g., "使用教程", "故障排除")
+- `filename`: Markdown filename in `/public/doc/`
+- `icon`: Emoji icon for visual identification
+- `lastUpdated`: Last update date (YYYY-MM-DD)
+
+**Adding as Main Document:**
+```typescript
+export const documents: DocumentMeta[] = [
+  {
+    id: "your-category",
+    title: "分类标题",
+    description: "分类描述",
+    category: "分类名称",
+    filename: "main_document.md",  // Optional if has subDocuments
+    icon: "📚",
+    lastUpdated: "2024-12-15",
+    subDocuments: []  // Optional
+  }
+]
+```
+
+**Adding as Sub-Document:**
+```typescript
+{
+  id: "tutorial",
+  title: "使用教程",
+  // ...
+  subDocuments: [
+    // ... existing documents
+    {
+      id: "your-subdoc-id",
+      title: "子文档标题",
+      description: "子文档描述",
+      category: "使用教程",
+      filename: "your_document.md",
+      icon: "🍎",
+      lastUpdated: "2024-12-15"
+    }
+  ]
+}
+```
+
+#### Step 3: Verify Integration
+```bash
+# Check TypeScript compilation
+npx tsc --noEmit lib/documents.ts
+
+# Test in development
+npm run dev
+```
+
+#### Complete Example: iOS Region Document
+
+**File:** `/public/doc/ios_appstore_region.md`
+```markdown
+# <font color="#1f497d">iOS用户重要提示</font>
+
+> ⚠️ **重要**: iOS应用**不支持大陆Apple ID**下载
+
+## 📱 问题说明
+[Content...]
+
+## ✅ 解决方案
+[Content...]
+```
+
+**Registration:** `/lib/documents.ts`
+```typescript
+{
+  id: "tutorial-ios-region",
+  title: "iOS用户重要提示",
+  description: "iOS应用下载需要使用美区Apple ID的说明和操作指南",
+  category: "使用教程",
+  filename: "ios_appstore_region.md",
+  icon: "🍎",
+  lastUpdated: "2024-12-15"
+}
+```
+
+### Document Categories
+Current categories in use:
+- **使用教程** - Client setup, configuration guides
+- **故障排除** - Troubleshooting and problem resolution
+- **常见问题** - FAQ and general questions
+
+### Best Practices
+- Use clear, concise Chinese language
+- Include visual aids (emoji, colored text)
+- Provide step-by-step instructions
+- Add common questions section when applicable
+- Test document rendering after adding
+- Keep descriptions under 100 characters
+- Use consistent icon themes within categories

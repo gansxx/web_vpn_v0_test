@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button"
 import { ProductItem, fmtDate } from "@/lib/dashboard-utils"
 import { SingleSubscriptionButton } from "./SingleSubscriptionButton"
+import { ManageSubscriptionButton } from "./ManageSubscriptionButton"
 
 interface PackageCardProps {
   products: ProductItem[]
@@ -25,13 +26,21 @@ export function PackageCard({ products, loading, error, onReload }: PackageCardP
             </svg>
             <h2 className="text-2xl font-bold">我的套餐</h2>
           </div>
-          <Button
-            onClick={onReload}
-            disabled={loading}
-            className="bg-white text-gray-900 hover:bg-gray-50 border border-gray-300"
-          >
-            {loading ? "刷新中..." : "刷新"}
-          </Button>
+          <div className="flex items-center gap-2">
+            <ManageSubscriptionButton
+              hasProducts={products.length > 0}
+              variant="outline"
+              size="sm"
+              className="bg-white text-gray-900 hover:bg-gray-50 border border-gray-300"
+            />
+            <Button
+              onClick={onReload}
+              disabled={loading}
+              className="bg-white text-gray-900 hover:bg-gray-50 border border-gray-300"
+            >
+              {loading ? "刷新中..." : "刷新"}
+            </Button>
+          </div>
         </div>
 
         {loading && (

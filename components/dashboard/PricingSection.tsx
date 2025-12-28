@@ -14,6 +14,7 @@ import { API_BASE } from "@/lib/config"
 import { purchaseAdvancedPlan } from "@/lib/advanced-plan-api"
 import { purchaseUnlimitedPlan } from "@/lib/unlimited-plan-api"
 import { getOrderProductStatus } from "@/lib/free-plan-api"
+import { purchaseSubscription } from "@/lib/subscription-api"
 
 interface PricingSectionProps {
   onPurchaseSuccess: () => void
@@ -92,14 +93,40 @@ export function PricingSection({ onPurchaseSuccess }: PricingSectionProps) {
     }
   }, [])
 
+  // 处理月度订阅支付
+  const handleMonthlyPurchase = useCallback(async () => {
+    setPurchasingPaidPlan(true)
+    try {
+      const result = await purchaseSubscription({
+        plan_id: "monthly_subscription"
+      })
+
+      if (result.success && result.checkout_url) {
+        // 跳转到 Stripe Subscription Checkout 页面
+        window.location.href = result.checkout_url
+      } else {
+        alert(result.message || "创建订阅会话失败")
+        setPurchasingPaidPlan(false)
+        setShowPaymentDialog(false)
+      }
+    } catch (error: any) {
+      console.error("购买月度订阅失败:", error)
+      alert(error?.message || "购买失败，请重试")
+      setPurchasingPaidPlan(false)
+      setShowPaymentDialog(false)
+    }
+  }, [])
+
   // 统一支付处理函数（根据套餐类型调用对应的购买函数）
   const handlePayment = useCallback(async () => {
     if (selectedPlanId === "premium") {
       await handlePremiumPurchase()
     } else if (selectedPlanId === "enterprise") {
       await handleEnterprisePurchase()
+    } else if (selectedPlanId === "monthly") {
+      await handleMonthlyPurchase()
     }
-  }, [selectedPlanId, handlePremiumPurchase, handleEnterprisePurchase])
+  }, [selectedPlanId, handlePremiumPurchase, handleEnterprisePurchase, handleMonthlyPurchase])
 
   // 倒计时和自动关闭效果
   useEffect(() => {
@@ -261,6 +288,13 @@ export function PricingSection({ onPurchaseSuccess }: PricingSectionProps) {
   }, [onPurchaseSuccess])
 
   const purchasePlan = useCallback(async (plan: any) => {
+    // 月度订阅（monthly）：显示支付方式选择弹窗
+    if (plan.id === "monthly") {
+      setSelectedPlanId(plan.id)
+      setShowPaymentDialog(true)
+      return
+    }
+
     // 高级套餐（premium）：显示支付方式选择弹窗
     if (plan.id === "premium") {
       setSelectedPlanId(plan.id)

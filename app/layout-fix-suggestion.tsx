@@ -5,7 +5,7 @@ import { GeistMono } from 'geist/font/mono'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Z加速_超大流量,超实惠的VPN服务',
+  title: 'Z加速_高速,不限流.开源的VPN服务',
 }
 
 export default function RootLayout({

@@ -6,7 +6,7 @@ import './globals.css'
 
 // 定义页面元数据
 export const metadata: Metadata = {
-  title: 'Z加速_超大流量,超实惠的VPN服务',
+  title: 'Z加速_高速,不限流.开源的VPN服务',
   // Next.js 会自动识别 app/icon.svg 作为 favicon
 }
 

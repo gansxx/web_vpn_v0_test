@@ -74,3 +74,181 @@ export const trackEvent = (
     console.log("📊 [Dev Mode] Event tracked:", eventName, params)
   }
 }
+
+// ============================================================================
+// GTM (Google Tag Manager) Tracking Functions
+// ============================================================================
+
+import { pushGTMEvent, getTimestamp } from "./gtm/utils"
+import type {
+  CTAClickEvent,
+  PageExitEvent,
+  FAQInteractionEvent,
+  PricingPlanClickEvent,
+} from "./gtm/events"
+
+/**
+ * 追踪CTA按钮点击事件
+ *
+ * @param ctaType - CTA类型: 'free_trial' 或 'learn_more'
+ * @param ctaText - CTA按钮文本
+ * @param ctaLocation - CTA位置: 'hero' 或 'header'
+ * @param targetUrl - 目标URL
+ */
+export const trackCTAClick = (
+  ctaType: "free_trial" | "learn_more",
+  ctaText: string,
+  ctaLocation: "hero" | "header",
+  targetUrl: string
+) => {
+  // 构建GTM事件对象
+  const gtmEvent: CTAClickEvent = {
+    event: "cta_click",
+    cta_type: ctaType,
+    cta_text: ctaText,
+    cta_location: ctaLocation,
+    target_url: targetUrl,
+    timestamp: getTimestamp(),
+  }
+
+  // 推送到GTM dataLayer
+  pushGTMEvent(gtmEvent)
+
+  // 同时发送到GA4 (向后兼容)
+  if (typeof window !== "undefined" && window.gtag) {
+    window.gtag("event", "cta_click", {
+      cta_type: ctaType,
+      cta_text: ctaText,
+      cta_location: ctaLocation,
+      target_url: targetUrl,
+    })
+  }
+}
+
+/**
+ * 追踪页面退出事件
+ *
+ * @param exitType - 退出类型: 'bounce' 或 'navigation'
+ * @param pageLoadTime - 页面加载时间戳 (Date.now())
+ * @param maxScrollDepth - 达到的最大滚动深度百分比 (0-100)
+ * @param sectionsViewed - 查看过的区域ID数组
+ */
+export const trackPageExit = (
+  exitType: "bounce" | "navigation",
+  pageLoadTime: number,
+  maxScrollDepth: number,
+  sectionsViewed: string[]
+) => {
+  const timeOnPage = Math.floor((Date.now() - pageLoadTime) / 1000)
+
+  // 构建GTM事件对象
+  const gtmEvent: PageExitEvent = {
+    event: "page_exit",
+    exit_type: exitType,
+    time_on_page: timeOnPage,
+    scroll_depth_reached: Math.round(maxScrollDepth),
+    sections_viewed: sectionsViewed,
+    timestamp: getTimestamp(),
+  }
+
+  // 推送到GTM dataLayer
+  pushGTMEvent(gtmEvent)
+
+  // 同时发送到GA4 (向后兼容)
+  if (typeof window !== "undefined" && window.gtag) {
+    window.gtag("event", "page_exit", {
+      exit_type: exitType,
+      time_on_page: timeOnPage,
+      scroll_depth_reached: Math.round(maxScrollDepth),
+      sections_viewed: sectionsViewed.join(","),
+    })
+  }
+}
+
+/**
+ * 追踪FAQ交互事件
+ *
+ * @param action - 操作类型: 'expand' 或 'collapse'
+ * @param faqId - FAQ问题ID
+ * @param faqQuestion - FAQ问题文本
+ * @param faqPosition - FAQ问题位置 (1-indexed)
+ * @param pageLoadTime - 页面加载时间戳 (Date.now())
+ */
+export const trackFAQInteraction = (
+  action: "expand" | "collapse",
+  faqId: string,
+  faqQuestion: string,
+  faqPosition: number,
+  pageLoadTime: number
+) => {
+  const timeOnPage = Math.floor((Date.now() - pageLoadTime) / 1000)
+
+  // 构建GTM事件对象
+  const gtmEvent: FAQInteractionEvent = {
+    event: "faq_interaction",
+    action,
+    faq_id: faqId,
+    faq_question: faqQuestion,
+    faq_position: faqPosition,
+    time_on_page: timeOnPage,
+    timestamp: getTimestamp(),
+  }
+
+  // 推送到GTM dataLayer
+  pushGTMEvent(gtmEvent)
+
+  // 同时发送到GA4 (向后兼容)
+  if (typeof window !== "undefined" && window.gtag) {
+    window.gtag("event", "faq_interaction", {
+      action,
+      faq_id: faqId,
+      faq_question: faqQuestion,
+      faq_position: faqPosition,
+      time_on_page: timeOnPage,
+    })
+  }
+}
+
+/**
+ * 追踪定价方案点击事件
+ *
+ * @param planData - 定价方案数据对象
+ */
+export const trackPricingPlanClick = (planData: {
+  plan_id: string
+  plan_name: string
+  plan_price: string
+  plan_badge?: string
+  has_promotion: boolean
+  promotion_label?: string
+  cta_text: string
+}) => {
+  // 构建GTM事件对象
+  const gtmEvent: PricingPlanClickEvent = {
+    event: "pricing_plan_click",
+    plan_id: planData.plan_id,
+    plan_name: planData.plan_name,
+    plan_price: planData.plan_price,
+    plan_badge: planData.plan_badge,
+    has_promotion: planData.has_promotion,
+    promotion_label: planData.promotion_label,
+    cta_text: planData.cta_text,
+    timestamp: getTimestamp(),
+  }
+
+  // 推送到GTM dataLayer
+  pushGTMEvent(gtmEvent)
+
+  // 同时发送到GA4 (向后兼容)
+  if (typeof window !== "undefined" && window.gtag) {
+    window.gtag("event", "pricing_plan_click", {
+      plan_id: planData.plan_id,
+      plan_name: planData.plan_name,
+      plan_price: planData.plan_price,
+      plan_badge: planData.plan_badge,
+      has_promotion: planData.has_promotion,
+      promotion_label: planData.promotion_label,
+      cta_text: planData.cta_text,
+    })
+  }
+}

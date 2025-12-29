@@ -6,8 +6,14 @@ import { Card, CardContent } from "@/components/ui/card"
 import { ClientDownloadCard } from "@/components/ClientDownloadCard"
 import { AppStoreCard } from "@/components/AppStoreCard"
 import { PLANS } from "@/lib/plans"
+import { FAQ } from "@/components/FAQ"
+import { trackCTAClick, trackPricingPlanClick } from "@/lib/analytics"
+import { usePageTracking } from "@/hooks/usePageTracking"
 
 export default function HomePage() {
+  // Initialize page tracking (scroll depth, page exit, etc.)
+  const { pageLoadTime } = usePageTracking()
+
   const scrollToSection = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" })
   }
@@ -73,13 +79,19 @@ export default function HomePage() {
             >
               下载
             </button>
+            <a href="/blog/self-host-vpn" className="text-muted-foreground hover:text-primary transition-colors">
+              自托管
+            </a>
             <a href="/blog" className="text-muted-foreground hover:text-primary transition-colors">
               发现世界
             </a>
             <a href="/dashboard" className="text-muted-foreground hover:text-primary transition-colors">
               控制台
             </a>
-            <Button asChild>
+            <Button
+              onClick={() => trackCTAClick('free_trial', '登录', 'header', '/signin')}
+              asChild
+            >
               <a href="/signin">登录</a>
             </Button>
           </nav>
@@ -87,23 +99,39 @@ export default function HomePage() {
         
       </header>
 
-      <section className="py-24 px-6 relative overflow-hidden bg-gradient-to-b from-transparent via-primary/5 to-transparent">
+      <section id="hero" className="py-24 px-6 relative overflow-hidden bg-gradient-to-b from-transparent via-primary/5 to-transparent">
         <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-transparent to-accent/10 pointer-events-none"></div>
         
         <div className="container mx-auto text-center max-w-4xl relative z-10">
           <div className="animate-fade-in-up">
-            <h1 className="text-5xl md:text-7xl font-bold text-foreground mb-6 text-balance">
-              解锁全球
-              <span className="text-primary">互联网</span>
+            <h1 className="text-5xl md:text-7xl font-bold mb-6 text-balance">
+              <span className="text-primary">高速</span>{" "}
+              <span className="text-accent">无限流量</span>{" "}
+              <span className="text-foreground">开源</span>
+              <br />
+              <span className="text-foreground">VPN服务</span>
             </h1>
             <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto text-pretty">
-              专业的网络加速服务，让您随时随地高速访问全球内容。支持多平台，稳定可靠。
+              为受限地区的<strong>创作者和开发者</strong>解锁全球顶尖ai
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" className="text-lg px-8" asChild>
+              <Button
+                size="lg"
+                className="text-lg px-8"
+                onClick={() => trackCTAClick('free_trial', '免费试用', 'hero', '/signin')}
+                asChild
+              >
                 <a href="/signin">免费试用</a>
               </Button>
-              <Button onClick={() => scrollToSection("features")} variant="outline" size="lg" className="text-lg px-8 bg-transparent">
+              <Button
+                onClick={() => {
+                  trackCTAClick('learn_more', '了解更多', 'hero', '#faq')
+                  scrollToSection("faq")
+                }}
+                variant="outline"
+                size="lg"
+                className="text-lg px-8 bg-transparent"
+              >
                 了解更多
               </Button>
             </div>
@@ -173,7 +201,7 @@ export default function HomePage() {
                   </svg>
                 </div>
                 <h3 className="text-xl font-semibold text-foreground mb-3">超大流量</h3>
-                <p className="text-muted-foreground">海量带宽资源，不限速不限流，畅享高清视频和大文件下载</p>
+                <p className="text-muted-foreground">海量带宽资源，不限速不限流，畅享高清视频</p>
               </CardContent>
             </Card>
 
@@ -185,12 +213,12 @@ export default function HomePage() {
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth={2}
-                      d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"
                     />
                   </svg>
                 </div>
-                <h3 className="text-xl font-semibold text-foreground mb-3">超高性价比</h3>
-                <p className="text-muted-foreground">合理定价，物超所值，让每个用户都能享受优质的网络服务</p>
+                <h3 className="text-xl font-semibold text-foreground mb-3">开源</h3>
+                <p className="text-muted-foreground">您可以托管自己的VPN，0信任，完全隐私</p>
               </CardContent>
             </Card>
           </div>
@@ -207,9 +235,13 @@ export default function HomePage() {
             <div>
               <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-6">适用于各种场景</h2>
               <p className="text-lg text-muted-foreground mb-8">
-                无论是观看海外视频、游戏加速、跨境电商还是学习研究，我们都能为您提供稳定快速的网络连接。
+                专为创作者和开发者设计，无论是访问全球顶尖AI服务、观看海外视频、游戏加速还是跨境业务，我们都能为您提供稳定快速的网络连接。
               </p>
               <div className="space-y-4">
+                <div className="flex items-center space-x-3">
+                  <div className="w-2 h-2 bg-primary rounded-full flex items-center justify-center"></div>
+                  <span className="text-foreground font-semibold">突破AI地区限制 - 畅享ChatGPT、Gemini、Claude等全球顶尖AI服务</span>
+                </div>
                 <div className="flex items-center space-x-3">
                   <div className="w-2 h-2 bg-primary rounded-full flex items-center justify-center"></div>
                   <span className="text-foreground">海外视频流媒体</span>
@@ -221,10 +253,6 @@ export default function HomePage() {
                 <div className="flex items-center space-x-3">
                   <div className="w-2 h-2 bg-primary rounded-full flex items-center justify-center"></div>
                   <span className="text-foreground">跨境电商业务</span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <div className="w-2 h-2 bg-primary rounded-full flex items-center justify-center"></div>
-                  <span className="text-foreground">学术研究资料</span>
                 </div>
               </div>
             </div>
@@ -332,6 +360,17 @@ export default function HomePage() {
                       className={`w-full ${btnClass}`}
                       size="lg"
                       disabled={plan.ctaDisabled}
+                      onClick={() => {
+                        trackPricingPlanClick({
+                          plan_id: plan.id,
+                          plan_name: plan.name,
+                          plan_price: plan.priceDisplay,
+                          plan_badge: plan.badgeText,
+                          has_promotion: !!plan.promotionLabel,
+                          promotion_label: plan.promotionLabel,
+                          cta_text: plan.ctaText,
+                        })
+                      }}
                       asChild
                     >
                       <a href="/signin">{plan.ctaText}</a>
@@ -433,7 +472,97 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-
+ <section id="faq">
+      <FAQ
+        pageLoadTime={pageLoadTime}
+        items={[
+          {
+            id: "faq-1",
+            question: "为什么应该使用VPN，而不是通过订阅cursor或openrouter绕过地区限制访问如gemini？",
+            answer: (
+              <p>
+                <h4 className="font-semibold text-foreground mb-2">透明度低</h4>
+                openrouter和cursor均是通过第三方调用如claude、gemini、chatgpt的api，这意味着通常你20美元的订阅费用通常无法使用完整的原版效果，且需要额外配置，透明度低。
+                <h4 className="font-semibold text-foreground mb-2">支持产品单一</h4>
+                使用cursor,你只能使用内置的api,你无法使用如claude code,nano banana,sora等AI厂商原生的产品,且也无法使用网页版的ai产品
+              </p>
+            ),
+          },
+          {
+            id: "faq-2",
+            question: "相比于其他VPN，为什么使用我们？",
+            answer: (
+              <div className="space-y-4">
+                <div>
+                  <h4 className="font-semibold text-foreground mb-2">专为AI地区访问限制提供解决方案</h4>
+                  <p>
+                    使用其他一些知名VPN，如ProtonVPN，它的出口IP地址多被记录和标记，这意味着你被识别为VPN而因此被禁止使用的可能性更大。同时ProtonVPN已经被大多数受限地区如中国、俄罗斯标记，无法在这些地区正常访问。
+                  </p>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-foreground mb-2">速度</h4>
+                  <p>
+                    相比其他VPN我们使用更新的基于http3协议的技术栈，这意味着我们<strong>更快、更流畅</strong>，这就好比在高速公路驾驶和在市中心的早高峰十字路口驾驶的体验差距。
+                  </p>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-foreground mb-2">无限流量</h4>
+                  <p>
+                    相比其他付费VPN，我们的套餐是无限流量的，这意味着你无需焦虑流量的使用。
+                  </p>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-foreground mb-2">无广告</h4>
+                  <p>
+                    相比免费VPN，我们没有任何广告，使用最清爽的界面解决您的地区受限网络问题，且我们提供免费VPN无法提供的极致速度体验。
+                  </p>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-foreground mb-2">免费试用</h4>
+                  <p>我们为您提供一个月的免费试用，并且您可以随时按需取消您的订阅。</p>
+                </div>
+              </div>
+            ),
+          },
+          {
+            id: "faq-3",
+            question: "我的隐私如何保障？",
+            answer: (
+              <div className="space-y-4">
+                <div>
+                  <h4 className="font-semibold text-foreground mb-2">无日志</h4>
+                  <p>
+                    我们承诺不会启用日志记录您的隐私，同时如果您有足够的技术经验(您也可以尝试让ai协助你)，我们也为您提供完全自主可控的开源自托管方案。
+                  </p>
+                </div>
+                
+              </div>
+            ),
+          },
+           {
+            id: "faq-4",
+            question: "我可以自托管一个私有的vpn吗？",
+            answer: (
+              <div className="space-y-4">
+                <div>
+                  <h4 className="font-semibold text-foreground mb-2">自托管</h4>
+                  <p>
+                    是的可以，但需要您有一定的技术知识，自托管运营方案（您无需向我们付费，但仍需要为第三方云服务商付费）教程，详情参见
+                    <a
+                      href="#self-hosting"
+                      className="text-primary hover:text-primary/80 underline ml-1"
+                    >
+                      自托管指南
+                    </a>
+                    。
+                  </p>
+                </div>
+              </div>
+            ),
+          },
+        ]}
+      />
+  </section>
       <footer className="bg-gradient-to-r from-primary via-primary to-accent text-primary-foreground py-12 px-6">
         <div className="container mx-auto">
           <div className="grid md:grid-cols-4 gap-8">
@@ -447,7 +576,7 @@ export default function HomePage() {
                 </div>
                 <span className="text-xl font-bold">Z加速</span>
               </div>
-              <p className="text-primary-foreground/80">专业的网络加速服务提供商</p>
+              <p className="text-primary-foreground/80">专业的VPN服务提供商</p>
             </div>
             <div>
               <h4 className="font-semibold mb-4">产品</h4>
@@ -455,16 +584,6 @@ export default function HomePage() {
                 <li>
                   <a href="#" className="hover:text-primary-foreground transition-colors">
                     VPN服务
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-primary-foreground transition-colors">
-                    游戏加速
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-primary-foreground transition-colors">
-                    企业方案
                   </a>
                 </li>
               </ul>

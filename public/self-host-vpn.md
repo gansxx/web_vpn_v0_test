@@ -1,5 +1,5 @@
 # 流程
-**自建多个协议节点教程很简单，整个教程分四步**：
+**自建VPN，整个教程分四步**：
 
 - 第一步：[购买VPS服务器](#note1)
 - 第二步：[远程连接服务器](#note2)
@@ -111,8 +111,12 @@ bash <(curl -Ls https://raw.githubusercontent.com/yonggekkk/sing-box-yg/main/sb.
 
 脚本会自动完成：
 - 安装 sing-box(VPN) 核心
-- 生成 4 种主流协议节点（vless / vmess / hysteria2 / tuic）
-输出二维码 + 通用订阅链接，下载客户端，导入即可链接即可
+- 生成 4 种主流协议节点（vless / vmess / hysteria2 / tuic），支持（v2rayN,hiddify）等客户端
+输出二维码 + 通用订阅链接，下载客户端，导入链接即可
+
+## 客户端下载和导入教程
+- 客户端下载和导入教程请注册登录后查看文档中心
+[客户端下载](/signin)
 
 # 4. 自动VPN生命周期管理(可选)
 - 如果你需要实现自动的VPN实例管理以实现节省成本,(在不使用时自动关闭以节省成本)，或希望体验ai全自动部署
